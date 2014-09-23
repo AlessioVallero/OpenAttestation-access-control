@@ -1,0 +1,66 @@
+#!/bin/bash
+#create user script
+EDIT_PARM="-e"
+HOST_PARM="-h"
+USERNAME_PARM="-uname"
+PASSWORD_PARM="-upwd"
+HOST_NAME=""
+USERNAME=""
+PASSWORD=""
+PORT=8443
+INFO=""
+
+ShowPermissionTypeExample()
+{
+  echo "Permission Type Example:"
+  echo -e "Edit Permission Type example:\n\033[31;49;5;1m bash oat_permission_type -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","IsEnforced":"false"}'\033[0m"
+}
+
+# Check that the number of params is correct
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowPermissionTypeExample
+  exit 0
+fi
+
+# Check that the user parm is in the correct position
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowPermissionTypeExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ -z "$5" ]; then
+  # The login credentials are not set
+  INFO="$4"
+else
+  if [ $4 == $USERNAME_PARM ];then
+    USERNAME="$5"
+    INFO="$8"
+
+    if [ $6 == $PASSWORD_PARM ];then
+      PASSWORD="$7"
+    fi
+  fi
+fi
+
+editPermissionType()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/permissions_types"
+}
+
+case $1 in
+      $EDIT_PARM)
+           echo "edit Permission Type:"
+           editPermissionType
+      ;;
+      *)
+      echo "Usage oat_user_permission {-e}"
+      ShowPermissionTypeExample
+      exit 3
+esac
+echo -e "\n"

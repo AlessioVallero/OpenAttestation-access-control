@@ -1,0 +1,108 @@
+#!/bin/bash
+#create user script
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+USERNAME_PARM="-uname"
+PASSWORD_PARM="-upwd"
+HOST_NAME=""
+USERNAME=""
+PASSWORD=""
+PORT=8443
+INFO=""
+
+ShowUserPermissionExample()
+{
+  echo "User Permission Example:"
+  echo -e "Add User Permission example:\n\033[31;49;5;1m bash oat_user_permission -a -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","Value":"VALUE"}'\033[0m"
+
+  echo -e "Edit User Permission example:\n\033[31;49;5;1m bash oat_user_permission -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","Value":"VALUE"}'\033[0m"
+
+  echo -e "Del User Permission example:\n\033[31;49;5;1m bash oat_user_permission -d -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME"}'\033[0m"
+}
+
+# Check that the number of params is correct
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowUserPermissionExample
+  exit 0
+fi
+
+# Check that the user parm is in the correct position
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowUserPermissionExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ -z "$5" ]; then
+  # The login credentials are not set
+  # In case of DELETE of an existing User Permission, the WS call works passing the values of the User Permission on the URL.
+  # So this USERNAME it's extracted with awk from the JSON obtained by the input command
+  if [ $1 == $DEL_PARM ];then
+    INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
+  else
+    INFO="$4"
+  fi
+else
+  if [ $4 == $USERNAME_PARM ];then
+    USERNAME="$5"
+    # In case of DELETE of an existing User Permission, the WS call works passing the values of the User Permission on the URL.
+    # So this USERNAME it's extracted with awk from the JSON obtained by the input command
+    if [ $1 == $DEL_PARM ];then
+      INFO="`echo $8 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+           sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
+    else
+      INFO="$8"
+    fi
+
+    if [ $6 == $PASSWORD_PARM ];then
+      PASSWORD="$7"
+    fi
+  fi
+fi
+
+addUserPermission() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions"
+}
+
+editUserPermission()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions"
+}
+
+delUserPermission()
+{
+  curl --cacert certfile.cer \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions?$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add User Permission:"
+           addUserPermission
+      ;;
+      $EDIT_PARM)
+           echo "edit User Permission:"
+           editUserPermission
+      ;;
+      $DEL_PARM)
+           echo "del User Permission:"
+           delUserPermission
+      ;;
+      *)
+      echo "Usage oat_user_permission {-a|-e|-d}"
+      ShowUserPermissionExample
+      exit 3
+esac
+echo -e "\n"

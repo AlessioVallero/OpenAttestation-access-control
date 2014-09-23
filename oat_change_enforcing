@@ -1,0 +1,42 @@
+#!/bin/bash
+#change enforcing
+ENFORCED_PARM="-enforced"
+ENFORCED=""
+
+ShowChangeEnforcingExample()
+{
+  echo -e "Change Enforcing example:\n\033[31;49;5;1m bash oat_change_enforcing -enforced ENFORCING_VALUE\033[0m"
+}
+
+# Check that the number of params is correct
+if [ $# -lt 2 ] || [ $1 != $ENFORCED_PARM ];then
+  echo "parm error!"
+  ShowChangeEnforcingExample
+  exit 0
+fi
+
+ENFORCED="$2"
+
+# change all the enforcing values
+bash oat_permission_type -e -h node-110 '{"Class":"Host","Operation":"Read_Report","ParName":"HostName","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"Host","Operation":"Attest","ParName":"HostName","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"Host","Operation":"Read_Attest","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"User","Operation":"Add","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"User","Operation":"Add","ParName":"Password","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"User","Operation":"Edit","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"User","Operation":"Edit","ParName":"Password","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"User","Operation":"Delete","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Add","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Add","ParName":"Class","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Add","ParName":"Operation","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Add","ParName":"ParName","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Add","ParName":"Value","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Edit","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Edit","ParName":"Class","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Edit","ParName":"Operation","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Edit","ParName":"ParName","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Edit","ParName":"Value","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Delete","ParName":"Username","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Delete","ParName":"Class","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Delete","ParName":"Operation","IsEnforced":"'$ENFORCED'"}'
+bash oat_permission_type -e -h node-110 '{"Class":"UserPermission","Operation":"Delete","ParName":"ParName","IsEnforced":"'$ENFORCED'"}'

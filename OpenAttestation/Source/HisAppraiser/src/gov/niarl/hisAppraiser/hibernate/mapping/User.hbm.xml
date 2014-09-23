@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="gov.niarl.hisAppraiser.hibernate.domain.User" table="USERS">
+		<id name="ID" column="ID" type="long" unsaved-value="null">
+			<generator class="native" />
+		</id>
+		<property name="Username" column="USERNAME"/>
+		<property name="Password" column="PASSWORD"/>
+        <property name="Deleted" column="DELETED"/>
+	</class>
+</hibernate-mapping>

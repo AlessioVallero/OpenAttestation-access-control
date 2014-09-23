@@ -1,0 +1,156 @@
+#!/bin/bash
+#create admin user
+PASSWORD_PARM="-upwd"
+PASSWORD=""
+
+ShowCreateAdminExample()
+{
+  echo -e "Create Admin User example:\n\033[31;49;5;1m bash oat_create_admin -upwd PASSWORD\033[0m"
+}
+
+# Check that the number of params is correct
+if [ $# -lt 2 ] || [ $1 != $PASSWORD_PARM ];then
+  echo "parm error!"
+  ShowCreateAdminExample
+  exit 0
+fi
+
+PASSWORD="$2"
+
+# create the admin user
+bash oat_user -a -h node-110 '{"Username":"admin","Password":"'$PASSWORD'"}'
+if [ $? == 0 ]; then
+  # add the Attest permission to the admin user for all the existing values
+  bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"Host","Operation":"Attest","ParName":"HostName","Value":".*"}'
+  if [ $? == 0 ]; then
+    # add the Read_Attest permission to the admin user for all the existing values
+    bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"Host","Operation":"Read_Attest","ParName":"Username","Value":".*"}'
+    if [ $? == 0 ]; then
+      # add the Read_Report permission to the admin user for all the existing values
+      bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"Host","Operation":"Read_Report","ParName":"HostName","Value":".*"}'
+      if [ $? == 0 ]; then
+        # add the User-Add-Username permission to the admin user for all the existing values
+        bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"User","Operation":"Add","ParName":"Username","Value":".*"}'
+        if [ $? == 0 ]; then
+          # add the User-Add-Password permission to the admin user only for alphanumeric values
+          bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"User","Operation":"Add","ParName":"Password","Value":"[a-zA-z0-9]s+"}'
+          if [ $? == 0 ]; then
+            # add the User-Edit-Username permission to the admin user for all the existing values
+            bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"User","Operation":"Edit","ParName":"Username","Value":".*"}'
+            if [ $? == 0 ]; then
+              # add the User-Edit-Password permission to the admin user only for alphanumeric values
+              bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"User","Operation":"Edit","ParName":"Password","Value":"[a-zA-z0-9]+"}'
+              if [ $? == 0 ]; then
+                # add the User-Delete-Username permission to the admin user for all the existing values
+                bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"User","Operation":"Delete","ParName":"Username","Value":".*"}'
+                if [ $? == 0 ]; then
+                  # add the UserPermission-Add-Username permission to the admin user for all the existing values
+                  bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Add","ParName":"Username","Value":".*"}'
+                  if [ $? == 0 ]; then
+                    # add the UserPermission-Add-Class permission to the admin user for all the existing values
+                    bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Add","ParName":"Class","Value":".*"}'
+                    if [ $? == 0 ]; then
+                      # add the UserPermission-Add-Operation permission to the admin user for all the existing values
+                      bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Add","ParName":"Operation","Value":".*"}'
+                      if [ $? == 0 ]; then
+                        # add the UserPermission-Add-ParName permission to the admin user for all the existing values
+                        bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Add","ParName":"ParName","Value":".*"}'
+                        if [ $? == 0 ]; then
+                          # add the UserPermission-Add-Value permission to the admin user for all the existing values
+                          bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Add","ParName":"Value","Value":".*"}'
+                          if [ $? == 0 ]; then
+                            # add the UserPermission-Edit-Username permission to the admin user for all the existing values
+                            bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Edit","ParName":"Username","Value":".*"}'
+                            if [ $? == 0 ]; then
+                              # add the UserPermission-Edit-Class permission to the admin user for all the existing values
+                              bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Edit","ParName":"Class","Value":".*"}'
+                              if [ $? == 0 ]; then
+                                # add the UserPermission-Edit-Operation permission to the admin user for all the existing values
+                                bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Edit","ParName":"Operation","Value":".*"}'
+                                if [ $? == 0 ]; then
+                                  # add the UserPermission-Edit-ParName permission to the admin user for all the existing values
+                                  bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Edit","ParName":"ParName","Value":".*"}'
+                                  if [ $? == 0 ]; then
+                                    # add the UserPermission-Edit-Value permission to the admin user for all the existing values
+                                    bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Edit","ParName":"Value","Value":".*"}'
+                                    if [ $? == 0 ]; then
+                                      # add the UserPermission-Delete-Username permission to the admin user for all the existing values
+                                      bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Delete","ParName":"Username","Value":".*"}'
+                                      if [ $? == 0 ]; then
+                                        # add the UserPermission-Delete-Class permission to the admin user for all the existing values
+                                        bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Delete","ParName":"Class","Value":".*"}'
+                                        if [ $? == 0 ]; then
+                                          # add the UserPermission-Delete-Operation permission to the admin user for all the existing values
+                                          bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Delete","ParName":"Operation","Value":".*"}'
+                                          if [ $? == 0 ]; then
+                                            # add the UserPermission-Delete-ParName permission to the admin user for all the existing values
+                                            bash oat_user_permission -a -h node-110 '{"Username":"admin","Class":"UserPermission","Operation":"Delete","ParName":"ParName","Value":".*"}'
+                                            if [ $? != 0 ]; then
+                                              echo -e "oat_user_permission -a UserPermission-Delete-ParName failed!"
+                                            fi
+                                          else
+                                            echo -e "oat_user_permission -a UserPermission-Delete-Operation failed!"
+                                          fi
+                                        else
+                                          echo -e "oat_user_permission -a UserPermission-Delete-Class failed!"
+                                        fi
+                                      else
+                                        echo -e "oat_user_permission -a UserPermission-Delete-Username failed!"
+                                      fi
+                                    else
+                                      echo -e "oat_user_permission -a UserPermission-Edit-Value failed!"
+                                    fi
+                                  else
+                                    echo -e "oat_user_permission -a UserPermission-Edit-ParName failed!"
+                                  fi
+                                else
+                                  echo -e "oat_user_permission -a UserPermission-Edit-Operation failed!"
+                                fi
+                              else
+                                echo -e "oat_user_permission -a UserPermission-Edit-Class failed!"
+                              fi
+                            else
+                              echo -e "oat_user_permission -a UserPermission-Edit-Username failed!"
+                            fi
+                          else
+                            echo -e "oat_user_permission -a UserPermission-Add-Value failed!"
+                          fi
+                        else
+                          echo -e "oat_user_permission -a UserPermission-Add-ParName failed!"
+                        fi
+                      else
+                        echo -e "oat_user_permission -a UserPermission-Add-Operation failed!"
+                      fi
+                    else
+                      echo -e "oat_user_permission -a UserPermission-Add-Class failed!"
+                    fi
+                  else
+                    echo -e "oat_user_permission -a UserPermission-Add-Username failed!"
+                  fi
+                else
+                  echo -e "oat_user_permission -a User-Delete-Username failed!"
+                fi
+              else
+                echo -e "oat_user_permission -a User-Edit-Password failed!"
+              fi
+            else
+              echo -e "oat_user_permission -a User-Edit-Username failed!"
+            fi
+          else
+            echo -e "oat_user_permission -a User-Add-Password failed!"
+          fi
+        else
+          echo -e "oat_user_permission -a User-Add-Username failed!"
+        fi
+      else
+        echo -e "oat_user_permission -a Host-Read_Report-Username failed!"
+      fi
+    else
+      echo -e "oat_user_permission -a Host-Read_Attest-HostName failed!"
+    fi
+  else
+    echo -e "oat_user_permission -a Host-Attest-HostName failed!"
+  fi
+else
+  echo -e "oat_user -a failed!"
+fi

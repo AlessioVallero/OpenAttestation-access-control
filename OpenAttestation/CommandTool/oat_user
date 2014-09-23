@@ -1,0 +1,108 @@
+#!/bin/bash
+#create user script
+ADD_PARM="-a"
+EDIT_PARM="-e"
+DEL_PARM="-d"
+HOST_PARM="-h"
+USERNAME_PARM="-uname"
+PASSWORD_PARM="-upwd"
+HOST_NAME=""
+USERNAME=""
+PASSWORD=""
+PORT=8443
+INFO=""
+
+ShowUserExample()
+{
+  echo "User Example:"
+  echo -e "Add User example:\n\033[31;49;5;1m bash oat_user -a -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"DESIRED_USERNAME","Password":"DESIRED_PASSWORD"}'\033[0m"
+
+  echo -e "Edit User example:\n\033[31;49;5;1m bash oat_user -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"EXISTING_USERNAME","Password":"NEW_DESIRED_PASSWORD"}'\033[0m"
+
+  echo -e "Del User example:\n\033[31;49;5;1m bash oat_user -d -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"DESIRED_USERNAME"}'\033[0m"
+}
+
+# Check that the number of params is correct
+if [ $# -lt 4 ];then
+  echo "parm num error!"
+  ShowUserExample
+  exit 0
+fi
+
+# Check that the user parm is in the correct position
+if [ $2 != $HOST_PARM ];then
+  echo "-h parm error!"
+  ShowUserExample
+  exit 1
+else
+  HOST_NAME="$3"
+fi
+
+if [ -z "$5" ]; then
+  # The login credentials are not set
+  # In case of DELETE of an existing User, the WS call works passing the USERNAME of the User on the URL.
+  # So this USERNAME it's extracted with awk from the JSON obtained by the input command
+  if [ $1 == $DEL_PARM ];then
+    INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
+  else
+    INFO="$4"
+  fi
+else
+  if [ $4 == $USERNAME_PARM ];then
+    USERNAME="$5"
+    # In case of DELETE of an existing User, the WS call works passing the USERNAME of the User on the URL.
+    # So this USERNAME it's extracted with awk from the JSON obtained by the input command
+    if [ $1 == $DEL_PARM ];then
+      INFO="`echo $8 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
+           sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
+    else
+      INFO="$8"
+    fi
+
+    if [ $6 == $PASSWORD_PARM ];then
+      PASSWORD="$7"
+    fi
+  fi
+fi
+
+addUser() 
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+       -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users"
+}
+
+editUser()
+{
+  curl --cacert certfile.cer -H "Content-Type: application/json" \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users"
+}
+
+delUser()
+{
+  curl --cacert certfile.cer \
+        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/users?$INFO"
+}
+
+case $1 in
+      $ADD_PARM)
+           echo "add User:"
+           addUser
+      ;;
+      $EDIT_PARM)
+           echo "edit User:"
+           editUser
+      ;;
+      $DEL_PARM)
+           echo "del User:"
+           delUser
+      ;;
+      *)
+      echo "Usage oat_user {-a|-e|-d}"
+      ShowUserExample
+      exit 3
+esac
+echo -e "\n"

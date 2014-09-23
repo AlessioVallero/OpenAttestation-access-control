@@ -1,0 +1,4370 @@
+From e3da76c4dba5f44e14a3f42018d7a751108f1536 Mon Sep 17 00:00:00 2001
+From: alessio <alessio@node-110.(none)>
+Date: Sat, 22 Feb 2014 16:28:06 +0100
+Subject: [PATCH] Alessio Vallero (s192474): Access Control
+
+---
+ CommandTool/oat_permission_type                    |   66 ++
+ CommandTool/oat_pollhosts                          |   22 +-
+ CommandTool/oat_user                               |  108 +++
+ CommandTool/oat_user_permission                    |  108 +++
+ Installer/DPKG-OAT-Appraiser-Base/DEBIAN/postinst  |    1 +
+ Installer/FilesForLinux/init.sql                   |  113 +++-
+ .../bean/OpenAttestationResponseFault.java         |    1 +
+ .../AttestationService/resource/AttestService.java |   11 +-
+ .../AttestationService/resource/HOSTResource.java  |  173 +++--
+ Source/AttestationService/src/hibernateOat.cfg.xml |    3 +
+ .../hibernate/dao/PermissionTypeDAO.java           |   69 ++
+ .../niarl/hisAppraiser/hibernate/dao/UserDAO.java  |   67 ++
+ .../hibernate/dao/UserPermissionDAO.java           |  107 +++
+ .../hibernate/domain/AttestRequest.java            |   12 +-
+ .../hibernate/domain/PermissionType.java           |   93 +++
+ .../niarl/hisAppraiser/hibernate/domain/User.java  |   82 +++
+ .../hibernate/domain/UserPermissions.java          |   80 +++
+ .../hibernate/mapping/PermissionType.hbm.xml       |   15 +
+ .../hisAppraiser/hibernate/mapping/User.hbm.xml    |   14 +
+ .../hibernate/mapping/UserPermissions.hbm.xml      |   14 +
+ .../hibernate/mapping/attestRequest.hbm.xml        |   11 +-
+ .../hisAppraiser/hibernate/util/AttestService.java |  114 ++++
+ .../hisAppraiser/hibernate/util/AttestUtil.java    |    6 +-
+ .../hibernate/util/ParNameContainer.java           |   28 +
+ .../HisWebServices/src/OpenAttestation.properties  |    1 +
+ Source/Portal/.htaccess                            |   24 +
+ Source/Portal/attestation_requests.php             |  200 ++++++
+ Source/Portal/includes/navigation.php              |    1 +
+ .../includes/users_permissions_functions.php       |   58 ++
+ Source/Portal/reports.php                          |   61 +-
+ .../bean/OpenAttestationResponseFault.java         |    1 +
+ .../manifest/bean/UserPermissionsBean.java         |   94 +++
+ .../manifest/hibernate/dao/PermissionTypeDAO.java  |  113 ++++
+ .../manifest/hibernate/dao/UserDAO.java            |  159 +++++
+ .../manifest/hibernate/dao/UserPermissionDAO.java  |  247 +++++++
+ .../manifest/hibernate/domain/PermissionType.java  |   93 +++
+ .../manifest/hibernate/domain/User.java            |   82 +++
+ .../manifest/hibernate/domain/UserPermissions.java |   80 +++
+ .../hibernate/mapping/PermissionType.hbm.xml       |   15 +
+ .../manifest/hibernate/mapping/User.hbm.xml        |   14 +
+ .../hibernate/mapping/UserPermissions.hbm.xml      |   14 +
+ .../manifest/resource/PermissionTypeResource.java  |  149 +++++
+ .../manifest/resource/UserPermissionResource.java  |  695 ++++++++++++++++++++
+ .../manifest/resource/UserResource.java            |  385 +++++++++++
+ Source/WLMService/src/hibernateOat.cfg.xml         |    4 +
+ 45 files changed, 3702 insertions(+), 106 deletions(-)
+ create mode 100644 CommandTool/oat_permission_type
+ create mode 100644 CommandTool/oat_user
+ create mode 100644 CommandTool/oat_user_permission
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/PermissionTypeDAO.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserDAO.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserPermissionDAO.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/PermissionType.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/User.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/UserPermissions.java
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/PermissionType.hbm.xml
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/User.hbm.xml
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/UserPermissions.hbm.xml
+ create mode 100644 Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/ParNameContainer.java
+ create mode 100644 Source/Portal/.htaccess
+ create mode 100644 Source/Portal/attestation_requests.php
+ create mode 100644 Source/Portal/includes/users_permissions_functions.php
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/bean/UserPermissionsBean.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/PermissionTypeDAO.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserDAO.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserPermissionDAO.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/PermissionType.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/User.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/UserPermissions.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/PermissionType.hbm.xml
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/User.hbm.xml
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/UserPermissions.hbm.xml
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/resource/PermissionTypeResource.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserPermissionResource.java
+ create mode 100644 Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserResource.java
+
+diff --git a/CommandTool/oat_permission_type b/CommandTool/oat_permission_type
+new file mode 100644
+index 0000000..77ca9b3
+--- /dev/null
++++ b/CommandTool/oat_permission_type
+@@ -0,0 +1,66 @@
++#!/bin/bash
++#create user script
++EDIT_PARM="-e"
++HOST_PARM="-h"
++USERNAME_PARM="-uname"
++PASSWORD_PARM="-upwd"
++HOST_NAME=""
++USERNAME=""
++PASSWORD=""
++PORT=8443
++INFO=""
++
++ShowPermissionTypeExample()
++{
++  echo "Permission Type Example:"
++  echo -e "Edit Permission Type example:\n\033[31;49;5;1m bash oat_permission_type -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","IsEnforced":"false"}'\033[0m"
++}
++
++# Check that the number of params is correct
++if [ $# -lt 4 ];then
++  echo "parm num error!"
++  ShowPermissionTypeExample
++  exit 0
++fi
++
++# Check that the user parm is in the correct position
++if [ $2 != $HOST_PARM ];then
++  echo "-h parm error!"
++  ShowPermissionTypeExample
++  exit 1
++else
++  HOST_NAME="$3"
++fi
++
++if [ -z "$5" ]; then
++  # The login credentials are not set
++  INFO="$4"
++else
++  if [ $4 == $USERNAME_PARM ];then
++    USERNAME="$5"
++    INFO="$8"
++
++    if [ $6 == $PASSWORD_PARM ];then
++      PASSWORD="$7"
++    fi
++  fi
++fi
++
++editPermissionType()
++{
++  curl --cacert certfile.cer -H "Content-Type: application/json" \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/permissions_types"
++}
++
++case $1 in
++      $EDIT_PARM)
++           echo "edit Permission Type:"
++           editPermissionType
++      ;;
++      *)
++      echo "Usage oat_user_permission {-e}"
++      ShowPermissionTypeExample
++      exit 3
++esac
++echo -e "\n"
+diff --git a/CommandTool/oat_pollhosts b/CommandTool/oat_pollhosts
+index 274ff61..31ab740 100755
+--- a/CommandTool/oat_pollhosts
++++ b/CommandTool/oat_pollhosts
+@@ -1,12 +1,16 @@
+ #!/bin/bash
+ #create mles script
+ HOST_PARM="-h"
++USERNAME_PARM="-uname"
++PASSWORD_PARM="-upwd"
+ HOST_NAME=""
++USERNAME=""
++PASSWORD=""
+ INFO=""
+ PORT=8443
+ ShowPollHostExample()
+ {
+-   echo -e "PollHost example:\n\033[31;49;5;1m bash oat_pollhosts -h HOSTNAME_OF_OAT-APPRAISER '{"hosts":["HOSTNAME_OF_OAT-CLIENT"]}' \033[0m"
++   echo -e "PollHost example:\n\033[31;49;5;1m bash oat_pollhosts -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"hosts":["HOSTNAME_OF_OAT-CLIENT"]}' \033[0m"
+ }
+ 
+ if [ $# -lt 3 ];then
+@@ -23,12 +27,26 @@ else
+   HOST_NAME="$2"
+ fi
+ 
+-INFO="$3"
++if [ -z "$4" ]; then
++  # The login credentials are not set
++  INFO="$3"
++else
++  INFO="$7"
++  if [ $3 == $USERNAME_PARM ];then
++    USERNAME="$4"
++  fi
++
++  if [ $5 == $PASSWORD_PARM ];then
++    PASSWORD="$6"
++  fi
++fi
+ 
+ pollHosts()
+ {
+   curl --cacert certfile.cer -H "Content-Type: application/json" \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
+         -X POST -d "$INFO" "https://$HOST_NAME:$PORT/AttestationService/resources/PollHosts"
+ }
+ pollHosts
++
+ echo -e "\n"
+diff --git a/CommandTool/oat_user b/CommandTool/oat_user
+new file mode 100644
+index 0000000..82ed712
+--- /dev/null
++++ b/CommandTool/oat_user
+@@ -0,0 +1,108 @@
++#!/bin/bash
++#create user script
++ADD_PARM="-a"
++EDIT_PARM="-e"
++DEL_PARM="-d"
++HOST_PARM="-h"
++USERNAME_PARM="-uname"
++PASSWORD_PARM="-upwd"
++HOST_NAME=""
++USERNAME=""
++PASSWORD=""
++PORT=8443
++INFO=""
++
++ShowUserExample()
++{
++  echo "User Example:"
++  echo -e "Add User example:\n\033[31;49;5;1m bash oat_user -a -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"DESIRED_USERNAME","Password":"DESIRED_PASSWORD"}'\033[0m"
++
++  echo -e "Edit User example:\n\033[31;49;5;1m bash oat_user -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"EXISTING_USERNAME","Password":"NEW_DESIRED_PASSWORD"}'\033[0m"
++
++  echo -e "Del User example:\n\033[31;49;5;1m bash oat_user -d -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"DESIRED_USERNAME"}'\033[0m"
++}
++
++# Check that the number of params is correct
++if [ $# -lt 4 ];then
++  echo "parm num error!"
++  ShowUserExample
++  exit 0
++fi
++
++# Check that the user parm is in the correct position
++if [ $2 != $HOST_PARM ];then
++  echo "-h parm error!"
++  ShowUserExample
++  exit 1
++else
++  HOST_NAME="$3"
++fi
++
++if [ -z "$5" ]; then
++  # The login credentials are not set
++  # In case of DELETE of an existing User, the WS call works passing the USERNAME of the User on the URL.
++  # So this USERNAME it's extracted with awk from the JSON obtained by the input command
++  if [ $1 == $DEL_PARM ];then
++    INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
++         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
++  else
++    INFO="$4"
++  fi
++else
++  if [ $4 == $USERNAME_PARM ];then
++    USERNAME="$5"
++    # In case of DELETE of an existing User, the WS call works passing the USERNAME of the User on the URL.
++    # So this USERNAME it's extracted with awk from the JSON obtained by the input command
++    if [ $1 == $DEL_PARM ];then
++      INFO="`echo $8 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
++           sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
++    else
++      INFO="$8"
++    fi
++
++    if [ $6 == $PASSWORD_PARM ];then
++      PASSWORD="$7"
++    fi
++  fi
++fi
++
++addUser() 
++{
++  curl --cacert certfile.cer -H "Content-Type: application/json" \
++       -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++       -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users"
++}
++
++editUser()
++{
++  curl --cacert certfile.cer -H "Content-Type: application/json" \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users"
++}
++
++delUser()
++{
++  curl --cacert certfile.cer \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/users?$INFO"
++}
++
++case $1 in
++      $ADD_PARM)
++           echo "add User:"
++           addUser
++      ;;
++      $EDIT_PARM)
++           echo "edit User:"
++           editUser
++      ;;
++      $DEL_PARM)
++           echo "del User:"
++           delUser
++      ;;
++      *)
++      echo "Usage oat_user {-a|-e|-d}"
++      ShowUserExample
++      exit 3
++esac
++echo -e "\n"
+diff --git a/CommandTool/oat_user_permission b/CommandTool/oat_user_permission
+new file mode 100644
+index 0000000..d4352e5
+--- /dev/null
++++ b/CommandTool/oat_user_permission
+@@ -0,0 +1,108 @@
++#!/bin/bash
++#create user script
++ADD_PARM="-a"
++EDIT_PARM="-e"
++DEL_PARM="-d"
++HOST_PARM="-h"
++USERNAME_PARM="-uname"
++PASSWORD_PARM="-upwd"
++HOST_NAME=""
++USERNAME=""
++PASSWORD=""
++PORT=8443
++INFO=""
++
++ShowUserPermissionExample()
++{
++  echo "User Permission Example:"
++  echo -e "Add User Permission example:\n\033[31;49;5;1m bash oat_user_permission -a -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","Value":"VALUE"}'\033[0m"
++
++  echo -e "Edit User Permission example:\n\033[31;49;5;1m bash oat_user_permission -e -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME","Value":"VALUE"}'\033[0m"
++
++  echo -e "Del User Permission example:\n\033[31;49;5;1m bash oat_user_permission -d -h HOSTNAME_OF_OAT-APPRAISER -uname USERNAME -upwd PASSWORD '{"Username":"USERNAME_OF_USER_WITH_THIS_PERMISSION","Class":"CLASS","Operation":"OPERATION","ParName":"PARNAME"}'\033[0m"
++}
++
++# Check that the number of params is correct
++if [ $# -lt 4 ];then
++  echo "parm num error!"
++  ShowUserPermissionExample
++  exit 0
++fi
++
++# Check that the user parm is in the correct position
++if [ $2 != $HOST_PARM ];then
++  echo "-h parm error!"
++  ShowUserPermissionExample
++  exit 1
++else
++  HOST_NAME="$3"
++fi
++
++if [ -z "$5" ]; then
++  # The login credentials are not set
++  # In case of DELETE of an existing User Permission, the WS call works passing the values of the User Permission on the URL.
++  # So this USERNAME it's extracted with awk from the JSON obtained by the input command
++  if [ $1 == $DEL_PARM ];then
++    INFO="`echo $4 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
++         sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
++  else
++    INFO="$4"
++  fi
++else
++  if [ $4 == $USERNAME_PARM ];then
++    USERNAME="$5"
++    # In case of DELETE of an existing User Permission, the WS call works passing the values of the User Permission on the URL.
++    # So this USERNAME it's extracted with awk from the JSON obtained by the input command
++    if [ $1 == $DEL_PARM ];then
++      INFO="`echo $8 | awk -F{ '{print $2}' | awk -F} '{print $1}' | sed  's/\"//g' | \
++           sed 's/:/=/g' | sed 's/,/\&/g' | sed 's/ //g'`"
++    else
++      INFO="$8"
++    fi
++
++    if [ $6 == $PASSWORD_PARM ];then
++      PASSWORD="$7"
++    fi
++  fi
++fi
++
++addUserPermission() 
++{
++  curl --cacert certfile.cer -H "Content-Type: application/json" \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X POST -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions"
++}
++
++editUserPermission()
++{
++  curl --cacert certfile.cer -H "Content-Type: application/json" \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X PUT -d "$INFO" "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions"
++}
++
++delUserPermission()
++{
++  curl --cacert certfile.cer \
++        -H "Auth-blob: $USERNAME"#"$PASSWORD" \
++        -X DELETE  "https://$HOST_NAME:$PORT/WLMService/resources/users_permissions?$INFO"
++}
++
++case $1 in
++      $ADD_PARM)
++           echo "add User Permission:"
++           addUserPermission
++      ;;
++      $EDIT_PARM)
++           echo "edit User Permission:"
++           editUserPermission
++      ;;
++      $DEL_PARM)
++           echo "del User Permission:"
++           delUserPermission
++      ;;
++      *)
++      echo "Usage oat_user_permission {-a|-e|-d}"
++      ShowUserPermissionExample
++      exit 3
++esac
++echo -e "\n"
+diff --git a/Installer/DPKG-OAT-Appraiser-Base/DEBIAN/postinst b/Installer/DPKG-OAT-Appraiser-Base/DEBIAN/postinst
+index 74521a6..becb7ce 100755
+--- a/Installer/DPKG-OAT-Appraiser-Base/DEBIAN/postinst
++++ b/Installer/DPKG-OAT-Appraiser-Base/DEBIAN/postinst
+@@ -440,6 +440,7 @@ sed -i "s/Options Indexes/Options/" /etc/apache2/sites-available/default
+ sed -i "s/Options Indexes/Options/" /etc/apache2/sites-available/default-ssl
+ sed -i "s/Options Indexes/Options/" /etc/apache2/mods-available/alias.conf
+ sed -i "s/Options Indexes/Options/" /etc/apache2/sites-enabled/000-default
++sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride all/' /etc/apache2/sites-enabled/000-default
+ /etc/init.d/apache2 restart
+ #sed -i "s/expose_php = On/expose_php = Off/" /etc/php.ini
+ 
+diff --git a/Installer/FilesForLinux/init.sql b/Installer/FilesForLinux/init.sql
+index 21e3036..8732190 100644
+--- a/Installer/FilesForLinux/init.sql
++++ b/Installer/FilesForLinux/init.sql
+@@ -13,26 +13,6 @@ CREATE TABLE `PCR_manifest` (
+   UNIQUE KEY `PCR_UNIQUE` (`PCR_number`,`PCR_value`)
+ );
+ 
+-CREATE TABLE `attest_request` (
+-  `id` int(11) NOT NULL AUTO_INCREMENT,
+-  `request_id` varchar(50) DEFAULT NULL,
+-  `host_name` varchar(50) DEFAULT NULL,
+-  `request_time` datetime DEFAULT NULL,
+-  `next_action` int(11) DEFAULT NULL,
+-  `is_consumed_by_pollingWS` tinyint(1) DEFAULT NULL,
+-  `audit_log_id` int(11) DEFAULT NULL,
+-  `host_id` int(11) DEFAULT NULL,
+-  `request_host` varchar(50) DEFAULT NULL,
+-  `count` int(11) DEFAULT NULL,
+-  `PCRMask` varchar(50) DEFAULT NULL,
+-  `result` int(11) DEFAULT NULL,
+-  `is_sync` tinyint(1) DEFAULT NULL,
+-  `validate_time` datetime DEFAULT NULL,  
+-  PRIMARY KEY (`id`),
+-  KEY `FK_audit_log_id` (`audit_log_id`),
+-  KEY `UNIQUE` (`request_id`,`host_id`)
+-);
+-
+ 
+ 
+ /*==============================================================*/
+@@ -51,6 +31,11 @@ drop table if exists OS;
+ 
+ drop table if exists PCR_WHITE_LIST;
+ 
++drop table if exists USERS_PERMISSIONS;
++
++drop table if exists PERMISSIONS_TYPES;
++
++drop table if exists USERS;
+ 
+ /*==============================================================*/
+ /* Table: HOST                                                  */
+@@ -133,5 +118,91 @@ create table PCR_WHITE_LIST
+ );
+ 
+ /*==============================================================*/
+-/* End 								*/
++/* Table: USERS                                                 */
++/*==============================================================*/
++create table USERS
++(
++   ID                   int not null auto_increment,
++   USERNAME             varchar(50),
++   PASSWORD             varchar(40),
++   DELETED              tinyint(1),
++   primary key (ID)
++);
++
++CREATE TABLE `attest_request` (
++  `id` int(11) NOT NULL AUTO_INCREMENT,
++  `request_id` varchar(50) DEFAULT NULL,
++  `host_name` varchar(50) DEFAULT NULL,
++  `request_time` datetime DEFAULT NULL,
++  `next_action` int(11) DEFAULT NULL,
++  `is_consumed_by_pollingWS` tinyint(1) DEFAULT NULL,
++  `audit_log_id` int(11) DEFAULT NULL,
++  `host_id` int(11) DEFAULT NULL,
++  `request_host` varchar(50) DEFAULT NULL,
++  `count` int(11) DEFAULT NULL,
++  `PCRMask` varchar(50) DEFAULT NULL,
++  `result` int(11) DEFAULT NULL,
++  `is_sync` tinyint(1) DEFAULT NULL,
++  `validate_time` datetime DEFAULT NULL,
++  `id_users` int NOT NULL,
++  PRIMARY KEY (`id`),
++  KEY `FK_audit_log_id` (`audit_log_id`),
++  KEY `UNIQUE` (`request_id`,`host_id`),
++  FOREIGN KEY (`id_users`) REFERENCES USERS(ID)
++);
++
++/*==============================================================*/
++/* Table: PERMISSIONS_TYPES                                     */
++/*==============================================================*/
++create table PERMISSIONS_TYPES
++(
++   ID                   int not null auto_increment,
++   CLASS                varchar(100),
++   OPERATION            varchar(100),
++   PAR_NAME             varchar(100),
++   IS_ENFORCED          tinyint(1),
++   primary key (ID),
++   UNIQUE (CLASS, OPERATION, PAR_NAME)
++);
++
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("Host", "Read_Report", "HostName", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("Host", "Attest", "HostName", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("Host", "Read_Attest", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("User", "Add", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("User", "Add", "Password", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("User", "Edit", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("User", "Edit", "Password", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("User", "Delete", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Add", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Add", "Class", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Add", "Operation", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Add", "ParName", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Add", "Value", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Edit", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Edit", "Class", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Edit", "Operation", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Edit", "ParName", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Edit", "Value", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Delete", "Username", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Delete", "Class", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Delete", "Operation", 0);
++INSERT INTO PERMISSIONS_TYPES (CLASS, OPERATION, PAR_NAME, IS_ENFORCED) VALUES ("UserPermission", "Delete", "ParName", 0);
++
++/*==============================================================*/
++/* Table: USERS_PERMISSIONS                                     */
++/*==============================================================*/
++create table USERS_PERMISSIONS
++(
++   ID                   int not null auto_increment,
++   ID_USERS             int not null,
++   ID_PERMISSIONS_TYPES int not null,
++   VALUE                varchar(100),
++   primary key (ID),
++   UNIQUE (ID_USERS, ID_PERMISSIONS_TYPES) ,
++   FOREIGN KEY (ID_USERS) REFERENCES USERS(ID) ON DELETE CASCADE ,
++   FOREIGN KEY (ID_PERMISSIONS_TYPES) REFERENCES PERMISSIONS_TYPES(ID) ON DELETE CASCADE
++);
++
++/*==============================================================*/
++/* End 								                            */
+ /*==============================================================*/
+diff --git a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/bean/OpenAttestationResponseFault.java b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/bean/OpenAttestationResponseFault.java
+index 25b9c8d..764f0d9 100644
+--- a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/bean/OpenAttestationResponseFault.java
++++ b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/bean/OpenAttestationResponseFault.java
+@@ -54,6 +54,7 @@ public class OpenAttestationResponseFault {
+ 	public static class FaultCode{
+ 		public static int FAULT_1006 = 1006;
+ 		public static int FAULT_401 = 401;
++        public static int FAULT_403 = 403;
+ 		public static int FAULT_404 = 404;
+ 		public static int FAULT_500 = 500;
+ 		public static int FAULT_2001 = 2001;
+diff --git a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/AttestService.java b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/AttestService.java
+index e7a1649..71d4c67 100644
+--- a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/AttestService.java
++++ b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/AttestService.java
+@@ -18,8 +18,10 @@ import org.apache.log4j.Logger;
+ 
+ import java.util.Date;
+ import java.util.HashMap;
++import java.util.Collections;
+ import java.util.List;
+ import java.util.ArrayList;
++import java.lang.StringBuilder;
+ 
+ import com.intel.openAttestation.AttestationService.util.AttestUtil;
+ import com.intel.openAttestation.AttestationService.bean.Host;
+@@ -29,6 +31,9 @@ import com.intel.openAttestation.AttestationService.util.ResultConverter;
+ import com.intel.openAttestation.AttestationService.util.ResultConverter.AttestResult;
+ import com.intel.openAttestation.AttestationService.hibernate.dao.AttestDao;
+ 
++import org.hibernate.Query;
++import org.hibernate.Session;
++import com.intel.openAttestation.AttestationService.hibernate.util.HibernateUtilHis;
+ import gov.niarl.hisAppraiser.hibernate.domain.AttestRequest;
+ 
+ public class AttestService {
+@@ -177,15 +182,15 @@ public class AttestService {
+ 	 */
+ 	public static AttestRequest loadRequest(Long id) {
+ 		AttestDao dao = new AttestDao();
+-        return dao.getRequestById(id);
++		return dao.getRequestById(id);
+ 	}
+ 
+ 	/**
+-	 * authentication
++	 * authentication (currently not used, because this function it's also defined in the common namespace gov.niarl.hisAppraiser.hibernate.util.AttestService)
+ 	 * @param authblob
+ 	 * @return
+ 	 */
+ 	public static boolean ISV_Autherntication_module() {
+ 		return true;
+-	}
++ 	}
+ }
+diff --git a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/HOSTResource.java b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/HOSTResource.java
+index c849460..8589074 100644
+--- a/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/HOSTResource.java
++++ b/Source/AttestationService/src/com/intel/openAttestation/AttestationService/resource/HOSTResource.java
+@@ -50,6 +50,7 @@ import com.intel.openAttestation.AttestationService.bean.ReqAttestationBean;
+ import com.intel.openAttestation.AttestationService.util.ActionConverter;
+ 
+ import gov.niarl.hisAppraiser.util.HisUtil;
++import gov.niarl.hisAppraiser.hibernate.util.ParNameContainer;
+ 
+ import com.intel.openAttestation.AttestationService.util.ActionDelay.Action;
+ import com.intel.openAttestation.AttestationService.util.ResultConverter;
+@@ -479,73 +480,108 @@ public class HOSTResource {
+ 						" and remove all of the unwanted characters belonged to [# & + : \" \']");
+ 				return Response.status(status).header("Location", b.build()).entity(fault).build();
+ 			}
+-			
+-    		String requestId = addRequests(reqAttestation, requestHost, true);
+-    		System.out.println("resource requestId:" +requestId);
+-    		List<AttestRequest> reqs= getRequestsByReqId(requestId);
+-    		if (reqs != null){
+-    	   		if (timeThreshold != 0 ){
+-        			logger.info("timeThreshold:" + timeThreshold);
+-        			for (AttestRequest req: reqs){
+-        				AttestRequest lastReq = dao.getLastAttestedRequest(req.getHostName());
+-        				long lastValidateTime = lastReq.getId()== null? 0: lastReq.getValidateTime().getTime();
+-        				validateInterval = System.currentTimeMillis() - lastValidateTime;
+-        				logger.info("validateInterval:" +validateInterval);
+-        				if (validateInterval < timeThreshold && lastValidateTime !=0 ){
+-        					System.out.println("obtain the trustworthiness of last record");
+-        					req.setAuditLog(lastReq.getAuditLog());
+-        					req.setResult(lastReq.getResult());
+-        					req.setValidateTime(lastReq.getValidateTime());
+-        				}
+-        				else{
+-        					req.setNextAction(ActionConverter.getIntFromAction(Action.SEND_REPORT));
+-        					req.setIsConsumedByPollingWS(false);//this flags must be set at the same time.
+-        					logger.debug("Next Action:" +req.getNextAction());
+-        				}
+-        				dao.updateRequest(req);
+-        			}
+-        			//start a thread to attest the pending request
+-        			if (!isAllAttested(requestId)){
+-        				logger.info("requestId:" +requestId +"is not attested.");
+-    		    		CheckAttestThread checkAttestThread = new CheckAttestThread(requestId);
+-    		     		checkAttestThread.start();
+-        			}	
+-        		}
+-        		else{// timeThreshold is null
+-    	    		do{  //loop until all hosts are finished
+-    	    			for (AttestRequest req: reqs){
+-    	    				//load the request again because its status may be changed for each loop
+-    	    				AttestRequest reqnew = AttestService.loadRequest(req.getId());
+-    	    				if (reqnew.getResult() == null){
+-    	    					long timeUsed = System.currentTimeMillis() - req.getRequestTime().getTime();
+-    	    					if (req.getMachineCert() == null ){
+-    	    						req.setResult(ResultConverter.getIntFromResult(AttestResult.UN_KNOWN));
+-    	    						req.setValidateTime(new Date());
+-    	    						dao.updateRequest(req);
+-    	    					}
+-    	    					else if (timeUsed > AttestUtil.getDefaultAttestTimeout()){
+-    	    						req.setResult(ResultConverter.getIntFromResult(AttestResult.TIME_OUT));
+-    	    						req.setValidateTime(new Date());
+-    	    						dao.updateRequest(req);
+-    	    					} 
+-    	    				}
+-    	    			}
+-    	    			Thread.sleep(AttestUtil.getCheckAttestInterval());
+-    	    		}while(!AttestService.isAllAttested(requestId));
+-    	    		logger.info("requestId:" +requestId +" has attested");
+-        		}
+-        		
+-        		RespSyncBean syncResult = AttestService.getRespSyncResult(requestId);
+-        		logger.info("requestId:" +requestId +" has returned the attested result");
+-    			return Response.status(status).header("Location", b.build()).entity(syncResult).build();    			
+-    		} else {
+-    			status = Response.Status.INTERNAL_SERVER_ERROR;
+-    			AttestationResponseFault fault = new AttestationResponseFault(AttestationResponseFault.FaultName.FAULT_ATTEST_ERROR);
+-    			fault.setMessage("cannot fetch an entry from the table of AttestRequest, please check it");
+-    			return Response.status(status).header("Location", b.build()).entity(fault).build();
+-    		}
+-	    }catch(Exception e){
+-	    	status = Response.Status.INTERNAL_SERVER_ERROR;
++
++			// Authentication
++			Long userId = gov.niarl.hisAppraiser.hibernate.util.AttestService.ISV_Autherntication_module( request ) ;
++			if( userId < 0 )
++			{
++				status = Response.Status.UNAUTHORIZED ;
++				OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++						OpenAttestationResponseFault.FaultCode.FAULT_401);
++				fault.setError_message("Unauthorized poll hosts, please make sure that the authentication informations are correct");
++				return Response.status(status).header("Location", b.build()).entity(fault).build();
++			}
++
++			boolean isAttestEnforced = gov.niarl.hisAppraiser.hibernate.util.AttestService.ISV_Permission_Type_Enforcement( "Host" , "Attest" , "HostName" ) ;
++
++			List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++			// Check the Hosts validity, if the Enforcement is enabled
++			if( isAttestEnforced )
++			{
++				for( int i = 0 ; i < host.size() ; i++ )
++				{
++					parnameValues.add( new ParNameContainer( "HostName" , host.get( i ) ) ) ;
++				}
++			}
++
++			// If no element is enforced, or if they are all in the authorized format, we can proceed
++			if( parnameValues.size() < 1 || gov.niarl.hisAppraiser.hibernate.util.AttestService.doAuthorization( userId , "Host" , "Attest" , parnameValues ) )
++			{
++				String requestId = addRequests(reqAttestation, requestHost, true, userId);
++				System.out.println("resource requestId:" +requestId);
++				List<AttestRequest> reqs= getRequestsByReqId(requestId);
++				if (reqs != null){
++					if (timeThreshold != 0 ){
++						logger.info("timeThreshold:" + timeThreshold);
++						for (AttestRequest req: reqs){
++							AttestRequest lastReq = dao.getLastAttestedRequest(req.getHostName());
++							long lastValidateTime = lastReq.getId()== null? 0: lastReq.getValidateTime().getTime();
++							validateInterval = System.currentTimeMillis() - lastValidateTime;
++							logger.info("validateInterval:" +validateInterval);
++							if (validateInterval < timeThreshold && lastValidateTime !=0 ){
++								System.out.println("obtain the trustworthiness of last record");
++								req.setAuditLog(lastReq.getAuditLog());
++								req.setResult(lastReq.getResult());
++								req.setValidateTime(lastReq.getValidateTime());
++							}
++							else{
++								req.setNextAction(ActionConverter.getIntFromAction(Action.SEND_REPORT));
++								req.setIsConsumedByPollingWS(false);//this flags must be set at the same time.
++								logger.debug("Next Action:" +req.getNextAction());
++							}
++							dao.updateRequest(req);
++						}
++						//start a thread to attest the pending request
++						if (!isAllAttested(requestId)){
++							logger.info("requestId:" +requestId +"is not attested.");
++							CheckAttestThread checkAttestThread = new CheckAttestThread(requestId);
++							checkAttestThread.start();
++						}	
++					}
++					else{// timeThreshold is null
++						do{  //loop until all hosts are finished
++							for (AttestRequest req: reqs){
++								//load the request again because its status may be changed for each loop
++								AttestRequest reqnew = AttestService.loadRequest(req.getId());
++								if (reqnew.getResult() == null){
++									long timeUsed = System.currentTimeMillis() - req.getRequestTime().getTime();
++									if (req.getMachineCert() == null ){
++										req.setResult(ResultConverter.getIntFromResult(AttestResult.UN_KNOWN));
++										req.setValidateTime(new Date());
++										dao.updateRequest(req);
++									}
++									else if (timeUsed > AttestUtil.getDefaultAttestTimeout()){
++										req.setResult(ResultConverter.getIntFromResult(AttestResult.TIME_OUT));
++										req.setValidateTime(new Date());
++										dao.updateRequest(req);
++									} 
++								}
++							}
++							Thread.sleep(AttestUtil.getCheckAttestInterval());
++						}while(!AttestService.isAllAttested(requestId));
++						logger.info("requestId:" +requestId +" has attested");
++					}
++					
++					RespSyncBean syncResult = AttestService.getRespSyncResult(requestId);
++					logger.info("requestId:" +requestId +" has returned the attested result");
++					return Response.status(status).header("Location", b.build()).entity(syncResult).build();				
++				} else {
++					status = Response.Status.INTERNAL_SERVER_ERROR;
++					AttestationResponseFault fault = new AttestationResponseFault(AttestationResponseFault.FaultName.FAULT_ATTEST_ERROR);
++					fault.setMessage("cannot fetch an entry from the table of AttestRequest, please check it");
++					return Response.status(status).header("Location", b.build()).entity(fault).build();
++				}
++			}
++			else
++			{
++				status = Response.Status.FORBIDDEN ;
++				OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++						OpenAttestationResponseFault.FaultCode.FAULT_403);
++				fault.setError_message("The hosts are not in an authorized format");
++				return Response.status(status).header("Location", b.build()).entity(fault).build();
++			}
++		}catch(Exception e){
++			status = Response.Status.INTERNAL_SERVER_ERROR;
+ 			AttestationResponseFault fault = new AttestationResponseFault(AttestationResponseFault.FaultName.FAULT_ATTEST_ERROR);
+ 			fault.setMessage("poll hosts failed.");
+ 			fault.setDetail("Exception:" + e.toString());
+@@ -610,7 +646,7 @@ public class HOSTResource {
+ 		return hostBeanList;
+ 	}
+ 	
+-	public static String addRequests(ReqAttestationBean reqAttestation, String requestHost, boolean isSync) {
++	public static String addRequests(ReqAttestationBean reqAttestation, String requestHost, boolean isSync, Long userId) {
+ 		HOSTDAO dao = new HOSTDAO();
+ 		String requestId;
+ 		if (isSync)
+@@ -638,6 +674,7 @@ public class HOSTResource {
+ 			attestRequests[i].setCount(new Long(hostNum));
+ 			attestRequests[i].setPCRMask(reqAttestation.getPCRmask());
+ 			attestRequests[i].setIsSync(isSync);
++			attestRequests[i].setUsersId(userId);
+ 		}
+ 		for(AttestRequest req: attestRequests)
+ 			dao.saveRequest(req);
+diff --git a/Source/AttestationService/src/hibernateOat.cfg.xml b/Source/AttestationService/src/hibernateOat.cfg.xml
+index 2d62126..dedc750 100644
+--- a/Source/AttestationService/src/hibernateOat.cfg.xml
++++ b/Source/AttestationService/src/hibernateOat.cfg.xml
+@@ -32,5 +32,8 @@
+ 		<mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/OS.hbm.xml"/>
+ 		<mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/PcrWhiteList.hbm.xml"/>
+ 		<mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/HOST_MLE.hbm.xml"/>
++        <mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/User.hbm.xml"/>
++        <mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/UserPermissions.hbm.xml"/>
++        <mapping resource="gov/niarl/hisAppraiser/hibernate/mapping/PermissionType.hbm.xml"/>       
+ 	</session-factory>
+ </hibernate-configuration>
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/PermissionTypeDAO.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/PermissionTypeDAO.java
+new file mode 100644
+index 0000000..b2c47fc
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/PermissionTypeDAO.java
+@@ -0,0 +1,69 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.hibernate.domain.User;
++import gov.niarl.hisAppraiser.hibernate.domain.PermissionType;
++import gov.niarl.hisAppraiser.hibernate.util.HibernateUtilHis;
++import java.lang.StringBuilder;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the PERMISSIONS_TYPES tables
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class PermissionTypeDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public PermissionTypeDAO()
++    {
++    }
++
++    public boolean getPermissionTypeEnforcement( String classValue , String operationValue , String parnameValue )
++    {
++        boolean ret = false ;
++
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++
++            Query query = HibernateUtilHis.getSession().createQuery( "select pt.IsEnforced from PermissionType pt where pt.ClassValue = :classvalue and pt.Operation = :operationvalue and pt.ParName = :parnamevalue" ) ;
++            query.setString( "classvalue" , classValue ) ;
++            query.setString( "operationvalue" , operationValue ) ;
++            query.setString( "parnamevalue" , parnameValue ) ;
++
++            List list = query.list() ;
++            if( list.size() > 0 )
++            {
++                // The IsEnforced value will be returned
++                ret = ( (Boolean)list.get( 0 ) ).booleanValue() ;
++            }
++
++            HibernateUtilHis.commitTransaction() ;
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserDAO.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserDAO.java
+new file mode 100644
+index 0000000..eed0fe9
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserDAO.java
+@@ -0,0 +1,67 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import java.lang.StringBuilder;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.hibernate.domain.User;
++import gov.niarl.hisAppraiser.hibernate.util.HibernateUtilHis;
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the USERS table
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class UserDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public UserDAO()
++    {
++    }
++
++    public Long getAuthenticatedUserId( String username , String password )
++    {
++        Long ret = -1L ;
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Query query = HibernateUtilHis.getSession().createQuery( "select u.ID from User u where u.Username = :username and u.Password = :password and u.Deleted = 0" ) ;
++            query.setString( "username" , username ) ;
++            query.setString( "password" , password ) ;
++
++            List list = query.list() ;
++            if( list.size() > 0 )
++            {
++                // The ID of the User will be returned
++                ret = (Long)list.get( 0 ) ;
++            }
++
++            HibernateUtilHis.commitTransaction() ;
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserPermissionDAO.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserPermissionDAO.java
+new file mode 100644
+index 0000000..9be2355
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/dao/UserPermissionDAO.java
+@@ -0,0 +1,107 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++
++package gov.niarl.hisAppraiser.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.hibernate.domain.User;
++import gov.niarl.hisAppraiser.hibernate.domain.UserPermissions;
++import gov.niarl.hisAppraiser.hibernate.domain.PermissionType;
++import gov.niarl.hisAppraiser.hibernate.util.HibernateUtilHis;
++import java.lang.StringBuilder;
++import gov.niarl.hisAppraiser.hibernate.util.ParNameContainer;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the USERS - PERMISSIONS_TYPES - USERS_PERMISSIONS tables
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class UserPermissionDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public UserPermissionDAO()
++    {
++    }
++
++    public boolean doAuthorization( Long userId , String classValue , String operationValue , List<ParNameContainer> parnameValues )
++    {
++        boolean ret = false ;
++
++        try
++        {
++            if( parnameValues != null && parnameValues.size() > 0 )
++            {
++                HibernateUtilHis.beginTransaction() ;
++
++                Query query = HibernateUtilHis.getSession().createSQLQuery( "select pt.PAR_NAME , up.VALUE from USERS_PERMISSIONS up , PERMISSIONS_TYPES pt where up.ID_PERMISSIONS_TYPES = pt.ID and up.ID_USERS = :userid and pt.CLASS = :classvalue and pt.OPERATION = :operationvalue" ) ;
++                query.setLong( "userid" , userId ) ;
++                query.setString( "classvalue" , classValue ) ;
++                query.setString( "operationvalue" , operationValue ) ;
++
++                List list = query.list() ;
++
++                // For each param, we search on the query result for the the corresponding row. If it does not exists, it's an error
++                for( int i = 0 ; i < parnameValues.size() ; i++ )
++                {
++                    ParNameContainer pncToCheck = parnameValues.get( i ) ;
++
++                    int j ;
++                    for( j = 0 ; j < list.size() ; j++ )
++                    {
++                        Object[] rowValues = (Object[])list.get( j ) ;
++                        String parNameName = (String)rowValues[0] ;
++                        String parNameValue = (String)rowValues[1] ;
++
++                        if( parNameName.equals( pncToCheck.getParNameName() ) )
++                        {
++                            ret = pncToCheck.getParNameValue().matches( parNameValue ) ;
++                            // If the value is not valid, we can exit
++                            if( !ret )
++                            {
++                                HibernateUtilHis.rollbackTransaction() ;
++                                HibernateUtilHis.closeSession() ;
++                                return ret ;
++                            }
++
++                            // The element is found, we can break the searching loop
++                            break ;
++                        }
++                    }
++
++                    // If j = list.size(), then we haven't found the corresponding row, so we exit with false
++                    if( j == list.size() )
++                    {
++                        HibernateUtilHis.rollbackTransaction() ;
++                        HibernateUtilHis.closeSession() ;
++                        return ret ;
++                    }
++                }
++
++                HibernateUtilHis.commitTransaction() ;
++            }
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/AttestRequest.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/AttestRequest.java
+index d130696..92ffe2a 100644
+--- a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/AttestRequest.java
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/AttestRequest.java
+@@ -48,7 +48,9 @@ public class AttestRequest {
+ 	private Integer result;
+ 	
+ 	private Date validateTime; 
+-	
++
++	private Long usersId;
++
+ 	public Date getValidateTime() {
+ 		return validateTime;
+ 	}
+@@ -170,4 +172,12 @@ public class AttestRequest {
+ 	public void setRequestHost(String requestHost) {
+ 		this.requestHost = requestHost;
+ 	}
++
++	public Long getUsersId() {
++		return usersId;
++	}
++
++	public void setUsersId(Long usersId) {
++		this.usersId = usersId;
++	}
+ }
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/PermissionType.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/PermissionType.java
+new file mode 100644
+index 0000000..1206fcd
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/PermissionType.java
+@@ -0,0 +1,93 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++/**
++ * Java class linked to the PermissionsTypes table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++public class PermissionType
++{
++    private Long ID ;
++    private String Class ;
++    private String Operation ;
++    private String ParName ;
++    private Boolean IsEnforced ;
++
++    public PermissionType()
++    {
++    }
++    
++    public PermissionType( String Class , String Operation , String ParName , Boolean IsEnforced )
++    {
++        this.Class = Class ;
++        this.Operation = Operation ;
++        this.ParName = ParName ;
++        this.IsEnforced = IsEnforced ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public String getClassValue()
++    {
++        return Class ;
++    }
++
++    @XmlElement(name = "Class")
++    public void setClassValue( String classvalue )
++    {
++        Class = classvalue ;
++    }
++
++    public String getOperation()
++    {
++        return Operation ;
++    }
++
++    @XmlElement(name = "Operation")
++    public void setOperation( String operation )
++    {
++        Operation = operation ;
++    }
++
++    public String getParName()
++    {
++        return ParName ;
++    }
++
++    @XmlElement(name = "ParName")
++    public void setParName( String parName )
++    {
++        this.ParName = parName ;
++    }
++
++    public Boolean getIsEnforced()
++    {
++        return IsEnforced ;
++    }
++
++    @XmlElement(name = "IsEnforced")
++    public void setIsEnforced( Boolean isEnforced )
++    {
++        this.IsEnforced = isEnforced ;
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/User.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/User.java
+new file mode 100644
+index 0000000..ff3bcb6
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/User.java
+@@ -0,0 +1,82 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++import java.util.List;
++
++/**
++ * Java class linked to the Users table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++
++public class User
++{
++    private Long ID ;
++    private String Username ;
++    private String Password ;
++    private Boolean Deleted ;
++    
++    public User()
++    {
++    }
++    
++    public User( String username , String password , Boolean deleted )
++    {
++        this.Username = username ;
++        this.Password = password ;
++        this.Deleted = deleted ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public String getUsername()
++    {
++        return Username ;
++    }
++
++    @XmlElement(name = "Username")
++    public void setUsername( String username )
++    {
++        Username = username ;
++    }
++
++    public String getPassword()
++    {
++        return Password ;
++    }
++
++    @XmlElement(name = "Password")
++    public void setPassword( String password )
++    {
++        Password = password ;
++    }
++
++    public Boolean getDeleted()
++    {
++        return Deleted ;
++    }
++
++    @XmlElement(name = "Deleted")
++    public void setDeleted( Boolean deleted )
++    {
++        Deleted = deleted ;
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/UserPermissions.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/UserPermissions.java
+new file mode 100644
+index 0000000..21896d9
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/domain/UserPermissions.java
+@@ -0,0 +1,80 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++/**
++ * Java class linked to the UsersPermissions table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++public class UserPermissions
++{
++    private Long ID ;
++    private Long IDUsers ;
++    private Long IDPermissionsTypes ;
++    private String Value ;
++
++    public UserPermissions()
++    {
++    }
++    
++    public UserPermissions( Long IDUsers , Long IDPermissionsTypes , String Value )
++    {
++        this.IDUsers = IDUsers ;
++        this.IDPermissionsTypes = IDPermissionsTypes ;
++        this.Value = Value ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public Long getIDUsers()
++    {
++        return IDUsers ;
++    }
++
++    @XmlElement(name = "IDUsers")
++    public void setIDUsers( Long iDUsers )
++    {
++        IDUsers = iDUsers ;
++    }
++
++    public Long getIDPermissionsTypes()
++    {
++        return IDPermissionsTypes ;
++    }
++
++    @XmlElement(name = "IDPermissionsTypes")
++    public void setIDPermissionsTypes( Long iDPermissionsTypes )
++    {
++        IDPermissionsTypes = iDPermissionsTypes ;
++    }
++
++    public String getValue()
++    {
++        return Value ;
++    }
++
++    @XmlElement(name = "Value")
++    public void setValue( String Value )
++    {
++        this.Value = Value ;
++    }
++}
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/PermissionType.hbm.xml b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/PermissionType.hbm.xml
+new file mode 100644
+index 0000000..c957615
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/PermissionType.hbm.xml
+@@ -0,0 +1,15 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="gov.niarl.hisAppraiser.hibernate.domain.PermissionType" table="PERMISSIONS_TYPES">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="ClassValue" column="CLASS"/>
++		<property name="Operation" column="OPERATION"/>
++        <property name="ParName" column="PAR_NAME"/>
++        <property name="IsEnforced" column="IS_ENFORCED"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/User.hbm.xml b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/User.hbm.xml
+new file mode 100644
+index 0000000..8927360
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/User.hbm.xml
+@@ -0,0 +1,14 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="gov.niarl.hisAppraiser.hibernate.domain.User" table="USERS">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="Username" column="USERNAME"/>
++		<property name="Password" column="PASSWORD"/>
++        <property name="Deleted" column="DELETED"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/UserPermissions.hbm.xml b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/UserPermissions.hbm.xml
+new file mode 100644
+index 0000000..66d6432
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/UserPermissions.hbm.xml
+@@ -0,0 +1,14 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="gov.niarl.hisAppraiser.hibernate.domain.UserPermissions" table="USERS_PERMISSIONS">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="IDUsers" column="ID_USERS"/>
++		<property name="IDPermissionsTypes" column="ID_PERMISSIONS_TYPES"/>
++        <property name="Value" column="VALUE"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/attestRequest.hbm.xml b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/attestRequest.hbm.xml
+index d948f51..c0dcf02 100644
+--- a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/attestRequest.hbm.xml
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/mapping/attestRequest.hbm.xml
+@@ -15,11 +15,12 @@
+ 		<many-to-one name="auditLog" class="gov.niarl.hisAppraiser.hibernate.domain.AuditLog"  column="audit_log_id" unique="true"/>
+ 		<many-to-one  name="machineCert"  class="gov.niarl.hisAppraiser.hibernate.domain.MachineCert"  column="host_id"/>
+ 		<property name="requestHost" column="request_host"/>
+-	    <property name="count"></property>
+-	    <property name="PCRMask"></property>
+-	    <property name="isSync" column="is_sync"/>
+-	    <property name="result"></property>
+-	    <property name="validateTime" column="validate_time"></property>
++	<property name="count"></property>
++	<property name="PCRMask"></property>
++	<property name="isSync" column="is_sync"/>
++	<property name="result"></property>
++	<property name="validateTime" column="validate_time"></property>
++		<property name="UsersId" column="id_users"></property>
+ 	</class>
+ </hibernate-mapping>
+ 
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestService.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestService.java
+index b0d3e91..63a2c12 100644
+--- a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestService.java
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestService.java
+@@ -18,6 +18,9 @@ import gov.niarl.hisAppraiser.hibernate.domain.AuditLog;
+ import gov.niarl.hisAppraiser.hibernate.domain.PCRManifest;
+ import gov.niarl.hisAppraiser.hibernate.domain.PcrWhiteList;
+ import gov.niarl.hisAppraiser.hibernate.util.ResultConverter.AttestResult;
++import gov.niarl.hisAppraiser.hibernate.dao.UserDAO;
++import gov.niarl.hisAppraiser.hibernate.dao.UserPermissionDAO;
++import gov.niarl.hisAppraiser.hibernate.dao.PermissionTypeDAO;
+ 
+ import java.io.IOException;
+ import java.util.ArrayList;
+@@ -29,6 +32,9 @@ import javax.ws.rs.core.GenericEntity;
+ import com.sun.jersey.api.client.ClientResponse;
+ import com.sun.jersey.api.client.WebResource;
+ 
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++
+ public class AttestService {
+ 	
+ 	
+@@ -131,4 +137,112 @@ public class AttestService {
+ 		return pcrs;
+ 	}
+ 
++    /**
++     * authentication
++     * @param username
++     * @param password
++     * @return the user's id
++     */
++    public static Long ISV_Autherntication_module( javax.servlet.http.HttpServletRequest request )
++    {
++        Long ret = -1L ;
++        try
++        {
++            if( request != null )
++            {
++                String auth_blob = request.getHeader( "Auth-blob" ) ;
++                if( auth_blob == null || auth_blob.isEmpty() )
++                {
++
++                }
++                else
++                {
++                    String[] parts = auth_blob.split( "#" ) ;
++                    if( parts != null && parts.length == 2 )
++                    {
++                        // parts[0] -> Username
++                        // parts[1] -> Password
++                        if( parts[0] != null && !parts[0].isEmpty() &&
++                            parts[1] != null && !parts[1].isEmpty() )
++                        {
++                            String sPasswordSHA = getHash( parts[1] , "SHA-1" ) ;
++                            if( sPasswordSHA != null && !sPasswordSHA.isEmpty() )
++                            {
++                                UserDAO dao = new UserDAO() ;
++
++                                ret = dao.getAuthenticatedUserId( parts[0] , sPasswordSHA ) ;
++                            }
++                        }
++                    }
++                }
++            }
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            throw new RuntimeException( e ) ;
++        }
++    }
++
++    public static boolean ISV_Permission_Type_Enforcement( String classValue , String operationValue , String parnameValue )
++    {
++        boolean ret = false ;
++
++        try
++        {
++            PermissionTypeDAO dao = new PermissionTypeDAO() ;
++
++            ret = dao.getPermissionTypeEnforcement( classValue , operationValue , parnameValue ) ;
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            throw new RuntimeException( e ) ;
++        }
++    }
++
++    public static boolean doAuthorization( Long userId , String classValue , String operationValue , List<ParNameContainer> parnameValues )
++    {
++        boolean ret = false ;
++
++        try
++        {
++            UserPermissionDAO dao = new UserPermissionDAO() ;
++
++            ret = dao.doAuthorization( userId , classValue , operationValue , parnameValues ) ;
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            throw new RuntimeException( e ) ;
++        }
++    }
++
++    public static String getHash( String message , String algorithm )
++    {
++        try
++        {
++            // Create the HASH for the input message with the input algorithm
++            byte[] buffer = message.getBytes() ;
++            MessageDigest md = MessageDigest.getInstance( algorithm ) ;
++            md.update( buffer ) ;
++            byte[] digest = md.digest() ;
++            String hex = "" ;
++            for( int i = 0 ; i < digest.length ; i++ )
++            {
++                int b = digest[i] & 0xff ;
++                if( Integer.toHexString( b ).length() == 1 ) hex = hex + "0" ;
++                hex  = hex + Integer.toHexString( b ) ;
++            }
++            return hex ;
++        }
++        catch( NoSuchAlgorithmException e )
++        {
++            e.printStackTrace() ;
++        }
++        return null ;
++    }
+ }
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestUtil.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestUtil.java
+index fe883f8..c2ede1f 100644
+--- a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestUtil.java
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/AttestUtil.java
+@@ -35,6 +35,7 @@ public class AttestUtil {
+ 	
+ 	private static String manifestWSURL ="";
+ 	private static String trustStorePath = "";
++    private static boolean edit_permission_type_enabled;
+ 	
+ 	private static String PROPERTIES_NAME = "OpenAttestation.properties";
+ 	private static Properties attestationProperties = new Properties();
+@@ -50,6 +51,7 @@ public class AttestUtil {
+ 	    	   String truststore = attestationProperties.getProperty("TrustStore");
+ 	    	   manifestWSURL = manifesturl == null ? "":manifesturl;
+ 	    	   trustStorePath =truststore == null? "":truststore;
++               edit_permission_type_enabled = Boolean.parseBoolean(attestationProperties.getProperty("edit_permission_type_enabled"));
+ 			} 
+ 	       catch (IOException e) {
+                e.printStackTrace();
+@@ -83,7 +85,9 @@ public class AttestUtil {
+ 	    WebResource resource = Client.create(config).resource(url);
+ 		return resource;
+ 	}
+-	
++    public static boolean getEditPermissionTypeEnabled(){
++        return edit_permission_type_enabled;
++    }
+ 	
+ 	public static synchronized String generateRequestId(String label){
+ 		byte[] nonce = HisUtil.generateSecureRandom(16);
+diff --git a/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/ParNameContainer.java b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/ParNameContainer.java
+new file mode 100644
+index 0000000..844a24b
+--- /dev/null
++++ b/Source/HisAppraiser/src/gov/niarl/hisAppraiser/hibernate/util/ParNameContainer.java
+@@ -0,0 +1,28 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package gov.niarl.hisAppraiser.hibernate.util;
++
++public class ParNameContainer
++{
++    private String ParNameName ;
++    private String ParNameValue ;
++
++    public ParNameContainer( String parNameName , String parNameValue )
++    {
++        ParNameName = parNameName ;
++        ParNameValue = parNameValue ;
++    }
++
++    public String getParNameName()
++    {
++        return ParNameName ;
++    }
++
++    public String getParNameValue()
++    {
++        return ParNameValue ;
++    }
++}
+diff --git a/Source/HisWebServices/src/OpenAttestation.properties b/Source/HisWebServices/src/OpenAttestation.properties
+index 44646c7..b82609d 100644
+--- a/Source/HisWebServices/src/OpenAttestation.properties
++++ b/Source/HisWebServices/src/OpenAttestation.properties
+@@ -3,3 +3,4 @@ AttestationWebServicesUrl=https://<server.domain>:8443/OpenAttestationWebService
+ default_attest_interval=60000
+ default_attest_timeout=60000
+ TrustStore=/usr/lib/apache-tomcat-6.0.29/Certificate/TrustStore.jks
++edit_permission_type_enabled=true
+\ No newline at end of file
+diff --git a/Source/Portal/.htaccess b/Source/Portal/.htaccess
+new file mode 100644
+index 0000000..be909dc
+--- /dev/null
++++ b/Source/Portal/.htaccess
+@@ -0,0 +1,24 @@
++AuthType Basic
++AuthName "Give your username and password"
++
++Auth_MySQL_User root
++Auth_MySQL_Empty_Passwords on
++Auth_MySQL_Host localhost
++
++AuthBasicAuthoritative Off
++# Disable the default password file authentication
++AuthUserFile /dev/null
++Auth_MySQL on
++Auth_MySQL_DB oat_db
++Auth_MySQL_Password_Table USERS
++Auth_MySQL_Username_Field USERS.USERNAME
++Auth_MySQL_Password_Field USERS.PASSWORD
++Auth_MySQL_Password_Clause " AND DELETED=0"
++Auth_MySQL_Encryption_Types SHA1Sum
++Auth_MySQL_Persistent On
++Auth_MySQL_CharacterSet utf8
++
++Require valid-user
++Order allow,deny
++Allow from all
++
+diff --git a/Source/Portal/attestation_requests.php b/Source/Portal/attestation_requests.php
+new file mode 100644
+index 0000000..29a6f29
+--- /dev/null
++++ b/Source/Portal/attestation_requests.php
+@@ -0,0 +1,200 @@
++<?php
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++//CONNECT TO DATABASE
++include("includes/dbconnect.php");
++
++//PROCESS PAGE INPUT URL PARAMETER
++include("includes/pagenumber.php");
++
++include("includes/users_permissions_functions.php");
++
++$username = "" ;
++$user_regex = ".*" ;
++
++// If the login credentials are set
++if( isset( $_SERVER['PHP_AUTH_USER'] ) && isset( $_SERVER['PHP_AUTH_PW'] ) )
++{
++    // Escaping special chars on the username to prevent SQL Injection attacks
++    $username = mysql_real_escape_string( $_SERVER['PHP_AUTH_USER'] ) ;
++    $user_regex = GetUsersPermissionsValue( $username , "Host" , "Read_Attest" , "Username" ) ;
++}
++
++//PROCESS SORT INPUT URL PARAMETER -- THESE MUST BE IN AGREEMENT WITH TABLE COLUMNS
++switch($_GET["sort"])
++{
++case "hostnameasc":
++$order = " ORDER BY ar.host_name ASC, ar.id DESC";
++$sort = "sort=hostnameasc";
++break;
++case "hostnamedesc":
++$order = " ORDER BY ar.host_name DESC, ar.id DESC";
++$sort = "sort=hostnamedesc";
++break;
++case "requesttimeasc":
++$order = " ORDER BY ar.request_time ASC, ar.id DESC";
++$sort = "sort=requesttimeasc";
++break;
++case "requesttimedesc":
++$order = " ORDER BY ar.request_time DESC, ar.id DESC";
++$sort = "sort=requesttimedesc";
++break;
++case "reportasc":
++$order = " ORDER BY ar.audit_log_id ASC, ar.id DESC";
++$sort = "sort=reportasc";
++break;
++case "reportdesc":
++$order = " ORDER BY ar.audit_log_id DESC, ar.id DESC";
++$sort = "sort=reportdesc";
++break;
++case "requesthostasc":
++$order = " ORDER BY ar.request_host ASC, ar.id DESC";
++$sort = "sort=requesthostasc";
++break;
++case "requesthostdesc":
++$order = " ORDER BY ar.request_host DESC, ar.id DESC";
++$sort = "sort=requesthostdesc";
++break;
++case "validatetimeasc":
++$order = " ORDER BY ar.validate_time ASC, ar.id DESC";
++$sort = "sort=validatetimeasc";
++break;
++case "validatetimedesc":
++$order = " ORDER BY ar.validate_time DESC, ar.id DESC";
++$sort = "sort=validatetimedesc";
++break;
++case "userasc":
++$order = " ORDER BY u.USERNAME ASC, ar.id DESC";
++$sort = "sort=userasc";
++break;
++case "userdesc":
++$order = " ORDER BY u.USERNAME DESC, ar.id DESC";
++$sort = "sort=userdesc";
++break;
++case "attestrequestasc":
++$order = " ORDER BY ar.id ASC";
++$sort = "sort=attestrequestasc";
++break;
++case "attestrequestdesc":
++default:
++$order = " ORDER BY ar.id DESC";
++$sort = "sort=attestrequestdesc";
++break;
++}
++?>
++<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
++<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
++<head>
++<?php
++//INCLUDE STYLESHEETS
++include("includes/styles.php");
++?>
++<title>HIS Reports</title>
++</head>
++<body>
++<?php
++//INCLUDE CLASSIFICATION MARKINGS
++include("includes/classification.php");
++?>
++<div id="wrapper">
++<?php
++//INCLUDE THE HEADER
++include("includes/header.php");
++
++//INCLUDE THE NAVIGATION BAR
++include("includes/navigation.php");
++?>
++<div id="content">
++<div class="rightcol">
++<h1>Attestation Requests</h1>
++<?php
++//NEED A COUNT OF TOTAL RECORDS FOR THE PAGINATION SCRIPT
++$count = 0 ;
++if( $username )
++{
++    $count = mysql_fetch_row(mysql_query("SELECT COUNT(id) FROM attest_request at , users u WHERE at.id_users=u.ID and u.USERNAME REGEXP BINARY '".$$user_regex."'"));
++}
++else
++{
++    $count = mysql_fetch_row(mysql_query("SELECT COUNT(id) FROM attest_request"));
++}
++
++//NEED A FILE LINK FOR THE PAGINATION SCRIPT
++$link = "attestation_requests.php";
++
++//INVOKE PAGINATION
++include("includes/paginate.php");
++?>
++<table>
++<?php
++//DISPLAY TABLE HEADERS WITH SORT OPTIONS
++echo "<tr>\n";
++if($sort == "sort=attestrequestdesc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=attestrequestasc\">Attest Request <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=attestrequestasc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=attestrequestdesc\">Attest Request <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=attestrequestdesc\">Attest Request</a></th>";}}
++if($sort == "sort=hostnamedesc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=hostnameasc\">Host Name <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=hostnameasc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=hostnamedesc\">Host Name <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=hostnamedesc\">Host Name</a></th>";}}
++if($sort == "sort=requesttimedesc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesttimeasc\">Request Time <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=requesttimeasc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesttimedesc\">Request Time <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesttimedesc\">Request Time</a></th>";}}
++if($sort == "sort=reportdesc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=reportasc\">Report <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=reportasc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=reportdesc\">Report <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=reportdesc\">Report</a></th>";}}
++if($sort == "sort=requesthostdesc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesthostasc\">Request Host <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=requesthostasc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesthostdesc\">Request Host <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=requesthostdesc\">Request Host</a></th>";}}
++echo "<th>Count </th>" ;
++if($sort == "sort=validatetimedesc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=validatetimeasc\">Validate Time <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=validatetimeasc") { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=validatetimedesc\">Validate Time <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th><a href=\"attestation_requests.php?" . $page . "&sort=validatetimedesc\">Validate Time</a></th>";}}
++if($sort == "sort=userdesc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=userasc\">User <img src=\"images/fatcow/16/bullet_arrow_down.png\" alt=\"ascending icon\" /></a></th>";}
++else { if($sort == "sort=userasc") { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=userdesc\">User <img src=\"images/fatcow/16/bullet_arrow_up.png\" alt=\"descending icon\" /></a></th>";}
++else { echo "<th colspan=\"2\"><a href=\"attestation_requests.php?" . $page . "&sort=userdesc\">User</a></th>";}}
++echo "</tr>\n";
++
++//QUERY DATABASE FOR TABLE CONTENTS
++$result = mysql_query("SELECT ar.id, ar.host_name, ar.request_time, ar.audit_log_id, ar.request_host, ar.count , ar.validate_time , u.USERNAME FROM attest_request ar , USERS u WHERE ar.id_users = u.ID AND u.USERNAME REGEXP BINARY '".$user_regex."' ". $order . " LIMIT " . (($limit - 1) * 100) . ",100");
++
++//DISPLAY QUERY RESULTS IN TABLE
++if(!mysql_num_rows($result))
++{
++echo "<tr><td colspan=\"14\">No Results</td></tr>";
++}
++else
++{
++while($row = mysql_fetch_array($result))
++{
++echo "<tr>
++<td>" . $row["id"] . "</td>
++<td><a href=\"machine.php?name=" . $row["host_name"] . "\"><img src=\"images/fatcow/16/terminal.png\" /></a></td>
++<td>" . $row["host_name"] . "</td>
++<td>" . $row["request_time"] . "</td>
++<td><a href=\"reports.php?filter=single&id_single=" . $row["audit_log_id"] . "\"><img src=\"images/fatcow/16/zoom.png\" /></a></td>
++<td>" . $row["audit_log_id"] . "</td>
++<td>" . $row["request_host"] . "</td>
++<td>" . $row["count"] . "</td>
++<td>" . $row["validate_time"] . "</td>
++<td><a href=\"user.php?name=" . $row["USERNAME"] . "\"><img src=\"images/fatcow/16/user.png\" /></a></td>
++<td>" . $row["USERNAME"] . "</td>
++</tr>\n";
++}
++}
++?>
++</table>
++</div>
++</div>
++<?php
++//INCLUDE THE FOOTER
++include("includes/footer.php");
++?>
++</div>
++</body>
++</html>
++<?php
++//CLOSE DATABASE CONNECTION
++include("includes/dbclose.php");
++?>
+diff --git a/Source/Portal/includes/navigation.php b/Source/Portal/includes/navigation.php
+index 0c607b6..6e0db8e 100755
+--- a/Source/Portal/includes/navigation.php
++++ b/Source/Portal/includes/navigation.php
+@@ -17,6 +17,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ 			<ul>
+ 			<li><a href="alerts.php">Alerts</a></li>
+ 			<li><a href="reports.php">Reports</a></li>
++            <li><a href="attestation_requests.php">Attestation Requests</a></li>
+ 			<li><a href="machines.php">Machines</a></li>
+ 			<li><a href="pcrs.php">PCR Values</a></li>
+ 			<li><a href="stats.php">Statistics</a></li>
+diff --git a/Source/Portal/includes/users_permissions_functions.php b/Source/Portal/includes/users_permissions_functions.php
+new file mode 100644
+index 0000000..830a49f
+--- /dev/null
++++ b/Source/Portal/includes/users_permissions_functions.php
+@@ -0,0 +1,58 @@
++<?php
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++function GetUsersPermissionsValue( $username , $class , $operation , $parname )
++{
++    $user_regex = ".*" ;
++
++    //QUERY DATABASE TO GET THE USERID
++    $result_user_id = mysql_query( "SELECT u.ID FROM USERS u".
++                           " where u.Username = '".$username."' and u.DELETED = 0" ) ;
++
++    if( mysql_num_rows( $result_user_id ) )
++    {
++        $row_user_id = mysql_fetch_array( $result_user_id ) ;
++        $user_id = $row_user_id['ID'] ;
++        mysql_free_result( $result_user_id ) ;
++
++        //QUERY DATABASE TO GET THE IS_ENFORCED OF READ_ATTEST
++        $result_pt = mysql_query( "SELECT pt.ID , pt.IS_ENFORCED FROM PERMISSIONS_TYPES pt".
++                               " where pt.CLASS = '".$class."' and pt.OPERATION = '".$operation."' and pt.PAR_NAME = '".$parname."'" ) ;
++        if( mysql_num_rows( $result_pt ) )
++        {
++            $row_pt = mysql_fetch_array( $result_pt ) ;
++            $is_enforced = $row_pt['IS_ENFORCED'] ;
++
++            //IF IS_ENFORCED IS TRUE, WE HAVE TO SEARCH FOR THE REGEX VALUE
++            if( $is_enforced == 1 )
++            {
++                $result_user_regex = mysql_query( "SELECT up.VALUE FROM USERS_PERMISSIONS up".
++                                       " where up.ID_PERMISSIONS_TYPES = ".$row_pt['ID']." AND up.ID_USERS = ".$user_id ) ;
++
++                if( mysql_num_rows( $result_user_regex ) )
++                {
++                    $row_user_regex = mysql_fetch_array( $result_user_regex ) ;
++                    $user_regex = $row_user_regex['VALUE'] ;
++                    mysql_free_result( $result_user_regex ) ;
++                }
++                else
++                {
++                    // ALWAYS UNMATCHABLE
++                    $user_regex = "" ;
++                }
++            }
++            mysql_free_result( $result_pt ) ;
++        }
++    }
++    else
++    {
++        // ALWAYS UNMATCHABLE
++        $user_regex = "" ;
++    }
++
++    return $user_regex ;
++}
++?>
+\ No newline at end of file
+diff --git a/Source/Portal/reports.php b/Source/Portal/reports.php
+index cebfc21..8dcb8a0 100755
+--- a/Source/Portal/reports.php
++++ b/Source/Portal/reports.php
+@@ -19,24 +19,75 @@ include("includes/dbconnect.php");
+ //PROCESS PAGE INPUT URL PARAMETER
+ include("includes/pagenumber.php");
+ 
++include("includes/users_permissions_functions.php");
++
++$username = "" ;
++$user_regex = ".*" ;
++// If the login credentials are set
++if( isset( $_SERVER['PHP_AUTH_USER'] ) && isset( $_SERVER['PHP_AUTH_PW'] ) )
++{
++    // Escaping special chars on the username to prevent SQL Injection attacks
++    $username = mysql_real_escape_string( $_SERVER['PHP_AUTH_USER'] ) ;
++    $user_regex = GetUsersPermissionsValue( $username , "Host" , "Read_Report" , "HostName" ) ;
++}
++
++$hosts_regex_clause = " machine_name REGEXP BINARY '".$user_regex."'" ;
+ //PROCESS FILTER INPUT URL PARAMETER -- THESE MUST BE IN AGREEMENT WITH LEFT COLUMN
+ switch($_GET["filter"])
+ {
+ case "errorfree":
+-$where = " WHERE signature_verified = 1 AND (previous_differences = '' OR previous_differences = null)";
++if( $hosts_regex_clause )
++{
++    $hosts_regex_clause = " AND".$hosts_regex_clause ;
++}
++$where = " WHERE signature_verified = 1 AND (previous_differences = '' OR previous_differences = null)".$hosts_regex_clause;
+ $filter = "filter=errorfree";
+ break;
+ case "pcrs":
+-$where = " WHERE previous_differences != '' OR previous_differences != null";
++if( $hosts_regex_clause )
++{
++    $hosts_regex_clause = " AND".$hosts_regex_clause ;
++}
++$where = " WHERE previous_differences != '' OR previous_differences != null".$hosts_regex_clause;
+ $filter = "filter=pcrs";
+ break;
+ case "sig":
+-$where = " WHERE signature_verified = 0";
++if( $hosts_regex_clause )
++{
++    $hosts_regex_clause = " AND".$hosts_regex_clause ;
++}
++$where = " WHERE signature_verified = 0".$hosts_regex_clause;
+ $filter = "filter=sig";
+ break;
++case "single":
++if( isset( $_GET["id_single"] ) )
++{
++    if( $hosts_regex_clause )
++    {
++        $hosts_regex_clause = " AND".$hosts_regex_clause ;
++    }
++    // Escaping special chars on the id_single to prevent SQL Injection attacks
++    $id_single = mysql_real_escape_string( $_GET["id_single"] ) ;
++    $where = " WHERE id = ".$id_single.$hosts_regex_clause;
++    $filter = "filter=single";
++}
++else
++{
++    if( $hosts_regex_clause )
++    {
++        $hosts_regex_clause = " WHERE".$hosts_regex_clause ;
++    }
++    $where = $hosts_regex_clause;
++    $filter = "filter=all";
++}
++break;
+ case "all":
+ default:
+-$where = "";
++if( $hosts_regex_clause )
++{
++    $hosts_regex_clause = " WHERE".$hosts_regex_clause ;
++}
++$where = $hosts_regex_clause;
+ $filter = "filter=all";
+ break;
+ }
+@@ -163,7 +214,7 @@ echo "<tr>
+ if($row["previous_differences"] == NULL) { echo "<td><img src=\"images/fatcow/16/accept.png\" alt=\"ok icon\" /></td>";}
+ else { echo "<td><img src=\"images/fatcow/16/exclamation.png\" alt=\"exclamation icon\" /></td>";}
+ if($row["signature_verified"] == "1") { echo "<td><img src=\"images/fatcow/16/accept.png\" alt=\"ok icon\" /></td>";}
+-else { echo "<td><img src=\"images/fatcow/16/exclamation.png\" alt=\"exclamation icon\" /></td>";}					
++else { echo "<td><img src=\"images/fatcow/16/exclamation.png\" alt=\"exclamation icon\" /></td>";}                    
+ echo "<td>" . $row["timestamp"] . "</td>
+ <td><a href=\"machine.php?name=" . $row["machine_name"] . "\"><img src=\"images/fatcow/16/terminal.png\" /></a></td>
+ <td>" . $row["machine_name"] . "</td>
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/bean/OpenAttestationResponseFault.java b/Source/WLMService/src/com/intel/openAttestation/manifest/bean/OpenAttestationResponseFault.java
+index af89ff9..adb6bc2 100644
+--- a/Source/WLMService/src/com/intel/openAttestation/manifest/bean/OpenAttestationResponseFault.java
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/bean/OpenAttestationResponseFault.java
+@@ -45,6 +45,7 @@ public class OpenAttestationResponseFault {
+ 	public static class FaultCode{
+ 		public static int FAULT_1006 = 1006;
+ 		public static int FAULT_401 = 401;
++        public static int FAULT_403 = 403;
+ 		public static int FAULT_404 = 404;
+ 		public static int FAULT_500 = 500;
+ 		public static int FAULT_2001 = 2001;
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/bean/UserPermissionsBean.java b/Source/WLMService/src/com/intel/openAttestation/manifest/bean/UserPermissionsBean.java
+new file mode 100644
+index 0000000..281e854
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/bean/UserPermissionsBean.java
+@@ -0,0 +1,94 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.bean;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++/**
++ * Java class linked to the UsersPermissions table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++public class UserPermissionsBean
++{
++    String Username ;
++    String Class ;
++    String Operation ;
++    String ParName ;
++    private String Value ;
++    
++    public UserPermissionsBean()
++    {
++    }
++    
++    public UserPermissionsBean( String Username , String Class , String Operation , String ParName , String Value )
++    {
++        this.Username = Username ;
++        this.Class = Class ;
++        this.Operation = Operation ;
++        this.ParName = ParName ;
++        this.Value = Value ;
++    }
++
++    public String getUsername()
++    {
++        return Username ;
++    }
++
++    @XmlElement(name = "Username")
++    public void setUsername( String username )
++    {
++        Username = username ;
++    }
++
++    public String getClassValue()
++    {
++        return Class ;
++    }
++
++    @XmlElement(name = "Class")
++    public void setClassValue( String Class )
++    {
++        this.Class = Class ;
++    }
++
++    public String getOperation()
++    {
++        return Operation ;
++    }
++
++    @XmlElement(name = "Operation")
++    public void setOperation( String operation )
++    {
++        Operation = operation ;
++    }
++    public String getParName()
++    {
++        return ParName ;
++    }
++
++    @XmlElement(name = "ParName")
++    public void setParName( String parName )
++    {
++        ParName = parName ;
++    }
++
++    public String getValue()
++    {
++        return Value ;
++    }
++
++    @XmlElement(name="Value")
++    public void setValue( String value)
++    {
++        this.Value = value ;
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/PermissionTypeDAO.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/PermissionTypeDAO.java
+new file mode 100644
+index 0000000..c08358e
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/PermissionTypeDAO.java
+@@ -0,0 +1,113 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import com.intel.openAttestation.manifest.hibernate.domain.User;
++import com.intel.openAttestation.manifest.hibernate.domain.PermissionType;
++import com.intel.openAttestation.manifest.hibernate.util.HibernateUtilHis;
++import java.lang.StringBuilder;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the PERMISSIONS_TYPES tables
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class PermissionTypeDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public PermissionTypeDAO()
++    {
++    }
++
++    public void editPermissionTypeEntry( PermissionType permissionType )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++
++            Query query = session.createQuery( "from PermissionType pt where pt.ClassValue = :classValue and pt.Operation = :operationValue and pt.ParName = :parnameValue" ) ;
++            query.setString( "classValue" , permissionType.getClassValue() ) ;
++            query.setString( "operationValue" , permissionType.getOperation() ) ;
++            query.setString( "parnameValue" , permissionType.getParName() ) ;
++            List list = query.list() ;
++            if( list.size() < 1 )
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                throw new Exception( "Object not found" ) ;
++            }
++            PermissionType permissionTypeOld = (PermissionType)list.get( 0 ) ;
++            // Set the new IsEnforced
++            permissionTypeOld.setIsEnforced( permissionType.getIsEnforced() ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public boolean permissionTypeExists( PermissionType permissionType )
++    {
++        return permissionTypeExists( permissionType.getClassValue() , permissionType.getOperation() , permissionType.getParName() ) ;
++    }
++
++    public boolean permissionTypeExists( String classValue , String operationValue , String parnameValue )
++    {
++        boolean flag = false ;
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++
++            Query query = HibernateUtilHis.getSession().createQuery( "from PermissionType pt where pt.ClassValue = :classValue and pt.Operation = :operationValue and pt.ParName = :parnameValue" ) ;
++            query.setString( "classValue" , classValue ) ;
++            query.setString( "operationValue" , operationValue ) ;
++            query.setString( "parnameValue" , parnameValue ) ;
++
++            List list = query.list() ;
++
++            // If the permission type was found, the return value is true, false otherwise
++            if( list.size() < 1 )
++            {
++                flag =  false ;
++            }
++            else
++            {
++                flag = true ;
++            }
++
++            HibernateUtilHis.commitTransaction() ;
++            return flag ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserDAO.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserDAO.java
+new file mode 100644
+index 0000000..61ffb42
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserDAO.java
+@@ -0,0 +1,159 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import java.lang.StringBuilder;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import com.intel.openAttestation.manifest.hibernate.domain.User;
++import com.intel.openAttestation.manifest.hibernate.util.HibernateUtilHis;
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the USERS table
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class UserDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public UserDAO()
++    {
++    }
++
++    public void addUserEntry( User UserEntry )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++            // Insert of the new User
++            UserEntry.setDeleted( false ) ;
++            session.save( UserEntry ) ;
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public void editUserEntry( User userEntry )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++
++            Query query = session.createQuery( "from User u where u.Username = :username and u.Deleted = 0" ) ;
++            query.setString( "username" , userEntry.getUsername() ) ;
++            List list = query.list() ;
++            if( list.size() < 1 )
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                throw new Exception( "Object not found" ) ;
++            }
++            User userOld = (User)list.get( 0 ) ;
++            // Set the new password
++            userOld.setPassword( userEntry.getPassword() ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public void deleteUserEntry( String Username )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++
++            Query query = session.createQuery( "from User u where u.Username = :username and u.Deleted = 0" ) ;
++            query.setString( "username" , Username ) ;
++            List list = query.list() ;
++            if( list.size() < 1 )
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                throw new Exception( "Object not found" ) ;
++            }
++            User userOld = (User)list.get( 0 ) ;
++            // Set Deleted to true
++            userOld.setDeleted( true ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public boolean isUserExisted( String Username )
++    {
++        boolean flag = false ;
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Query query = HibernateUtilHis.getSession().createQuery( "from User u where u.Username = :value and u.Deleted = 0" ) ;
++            query.setString( "value" , Username ) ;
++            List list = query.list() ;
++
++            // If the User was found, the return value is true, false otherwise
++            if( list.size() < 1 )
++            {
++                flag =  false ;
++            }
++            else
++            {
++                flag = true ;
++            }
++
++            HibernateUtilHis.commitTransaction() ;
++            return flag ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserPermissionDAO.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserPermissionDAO.java
+new file mode 100644
+index 0000000..afef9a3
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/dao/UserPermissionDAO.java
+@@ -0,0 +1,247 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.dao;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Collections;
++import org.hibernate.Query;
++import org.hibernate.Session;
++import com.intel.openAttestation.manifest.hibernate.domain.User;
++import com.intel.openAttestation.manifest.hibernate.domain.UserPermissions;
++import com.intel.openAttestation.manifest.hibernate.domain.PermissionType;
++import com.intel.openAttestation.manifest.hibernate.util.HibernateUtilHis;
++import java.lang.StringBuilder;
++
++/**
++ * This class serves as a central location for updates and queries against 
++ * the USERS - PERMISSIONS_TYPES - USERS_PERMISSIONS tables
++ * @author intel
++ * @version OpenAttestation
++ *
++ */
++public class UserPermissionDAO
++{
++    /**
++     * Constructor to start a hibernate transaction in case one has not
++     * already been started 
++     */
++    public UserPermissionDAO()
++    {
++    }
++
++    public void addUserPermissionEntry( Long userID , Long permissionTypeID , String value )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++
++            // Insert the User Permission
++            UserPermissions userpermissions = new UserPermissions() ;
++            userpermissions.setIDUsers( userID ) ;
++            userpermissions.setIDPermissionsTypes( permissionTypeID ) ;
++            userpermissions.setValue( value ) ;
++            session.save( userpermissions ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public void editUserPermissionEntry( Long userID , Long permissionTypeID , String value )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++            // Delete old related permissions
++            Query query = session.createQuery( "from UserPermissions up where up.IDUsers = :idusers and up.IDPermissionsTypes = :permissionTypeID" ) ;
++            query.setLong( "idusers" , userID ) ;
++            query.setLong( "permissionTypeID" , permissionTypeID ) ;
++            List list = query.list() ;
++            // Searching for the User
++            if( list.size() < 1 )
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                throw new Exception( "Object not found" ) ;
++            }
++
++            UserPermissions userpermissions = (UserPermissions)list.get( 0 ) ;
++            userpermissions.setValue( value ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public void deleteUserPermissionEntry( Long userID , Long permissionTypeID )
++    {
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Session session = HibernateUtilHis.getSession() ;
++            // Delete old related permissions
++            Query query = session.createQuery( "from UserPermissions up where up.IDUsers = :idusers and up.IDPermissionsTypes = :permissionTypeID" ) ;
++            query.setLong( "idusers" , userID ) ;
++            query.setLong( "permissionTypeID" , permissionTypeID ) ;
++            List list = query.list() ;
++            if( list.size() < 1 )
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                throw new Exception( "Object not found" ) ;
++            }
++            UserPermissions UserPermissionsEntry = (UserPermissions)list.get( 0 ) ;
++            // Delete the UserPermissions from DB
++            session.delete( UserPermissionsEntry ) ;
++
++            HibernateUtilHis.commitTransaction() ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    // Return a User's ID from a User's Username
++    public Long getUserIDFromUsername( String Username )
++    {
++        Long ret = -1L ;
++
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Query query = HibernateUtilHis.getSession().createQuery( "select u.ID from User u where u.Username = :value and u.Deleted = 0" ) ;
++            query.setString( "value" , Username ) ;
++            List list = query.list() ;
++
++            if( list.size() > 0 )
++            {
++                ret = (Long)list.get( 0 ) ;
++                HibernateUtilHis.commitTransaction() ;
++            }
++            else
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                HibernateUtilHis.closeSession() ;
++            }
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    // Return a PermissionType's ID from all PermissionType's data
++    public Long getPermissionTypeIDFromPermissionTypeData( String classpar , String operation , String parName )
++    {
++        Long ret = -1L ;
++
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++            Query query = HibernateUtilHis.getSession().createQuery( "select pt.ID from PermissionType pt where pt.ClassValue = :class and pt.Operation = :operation and pt.ParName = :parName" ) ;
++            query.setString( "class" , classpar ) ;
++            query.setString( "operation" , operation ) ;
++            query.setString( "parName" , parName ) ;
++
++            List list = query.list() ;
++
++            if( list.size() > 0 )
++            {
++                ret = (Long)list.get( 0 ) ;
++                HibernateUtilHis.commitTransaction() ;
++            }
++            else
++            {
++                HibernateUtilHis.rollbackTransaction() ;
++                HibernateUtilHis.closeSession() ;
++            }
++
++            return ret ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++
++    public boolean userPermissionsExists( Long userID , Long permissionTypeID )
++    {
++        boolean flag = false ;
++        try
++        {
++            HibernateUtilHis.beginTransaction() ;
++
++            Query query = HibernateUtilHis.getSession().createQuery( "from UserPermissions up where up.IDUsers = :iduser and up.IDPermissionsTypes = :idpermissiontype" ) ;
++            query.setLong( "iduser" , userID ) ;
++            query.setLong( "idpermissiontype" , permissionTypeID ) ;
++
++            List list = query.list() ;
++
++            // If a User's permission was found, the return value is true, false otherwise
++            if( list.size() < 1 )
++            {
++                flag =  false ;
++            }
++            else
++            {
++                flag = true ;
++            }
++
++            HibernateUtilHis.commitTransaction() ;
++            return flag ;
++        }
++        catch( Exception e )
++        {
++            HibernateUtilHis.rollbackTransaction() ;
++            e.printStackTrace() ;
++            throw new RuntimeException( e ) ;
++        }
++        finally
++        {
++            HibernateUtilHis.closeSession() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/PermissionType.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/PermissionType.java
+new file mode 100644
+index 0000000..65c1abd
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/PermissionType.java
+@@ -0,0 +1,93 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++/**
++ * Java class linked to the PermissionsTypes table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++public class PermissionType
++{
++    private Long ID ;
++    private String Class ;
++    private String Operation ;
++    private String ParName ;
++    private Boolean IsEnforced ;
++
++    public PermissionType()
++    {
++    }
++    
++    public PermissionType( String Class , String Operation , String ParName , boolean IsEnforced )
++    {
++        this.Class = Class ;
++        this.Operation = Operation ;
++        this.ParName = ParName ;
++        this.IsEnforced = IsEnforced ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public String getClassValue()
++    {
++        return Class ;
++    }
++
++    @XmlElement(name = "Class")
++    public void setClassValue( String classvalue )
++    {
++        Class = classvalue ;
++    }
++
++    public String getOperation()
++    {
++        return Operation ;
++    }
++
++    @XmlElement(name = "Operation")
++    public void setOperation( String operation )
++    {
++        Operation = operation ;
++    }
++
++    public String getParName()
++    {
++        return ParName ;
++    }
++
++    @XmlElement(name = "ParName")
++    public void setParName( String parName )
++    {
++        this.ParName = parName ;
++    }
++
++    public Boolean getIsEnforced()
++    {
++        return IsEnforced ;
++    }
++
++    @XmlElement(name = "IsEnforced")
++    public void setIsEnforced( Boolean isEnforced )
++    {
++        this.IsEnforced = isEnforced ;
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/User.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/User.java
+new file mode 100644
+index 0000000..5631663
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/User.java
+@@ -0,0 +1,82 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++import java.util.List;
++
++/**
++ * Java class linked to the Users table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++
++public class User
++{
++    private Long ID ;
++    private String Username ;
++    private String Password ;
++    private Boolean Deleted ;
++    
++    public User()
++    {
++    }
++    
++    public User( String username , String password , Boolean deleted )
++    {
++        this.Username = username ;
++        this.Password = password ;
++        this.Deleted = deleted ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public String getUsername()
++    {
++        return Username ;
++    }
++
++    @XmlElement(name = "Username")
++    public void setUsername( String username )
++    {
++        Username = username ;
++    }
++
++    public String getPassword()
++    {
++        return Password ;
++    }
++
++    @XmlElement(name = "Password")
++    public void setPassword( String password )
++    {
++        Password = password ;
++    }
++
++    public Boolean getDeleted()
++    {
++        return Deleted ;
++    }
++
++    @XmlElement(name = "Deleted")
++    public void setDeleted( Boolean deleted )
++    {
++        Deleted = deleted ;
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/UserPermissions.java b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/UserPermissions.java
+new file mode 100644
+index 0000000..33400b0
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/domain/UserPermissions.java
+@@ -0,0 +1,80 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.hibernate.domain;
++
++import javax.xml.bind.annotation.XmlRootElement;
++
++import javax.xml.bind.annotation.XmlElement;
++
++/**
++ * Java class linked to the UsersPermissions table.
++ * @author  intel
++ * @version OpenAttestation
++ *
++ */
++
++@XmlRootElement
++public class UserPermissions
++{
++    private Long ID ;
++    private Long IDUsers ;
++    private Long IDPermissionsTypes ;
++    private String Value ;
++
++    public UserPermissions()
++    {
++    }
++    
++    public UserPermissions( Long IDUsers , Long IDPermissionsTypes , String Value )
++    {
++        this.IDUsers = IDUsers ;
++        this.IDPermissionsTypes = IDPermissionsTypes ;
++        this.Value = Value ;
++    }
++
++    public Long getID()
++    {
++        return ID ;
++    }
++
++    public void setID( Long iD )
++    {
++        ID = iD ;
++    }
++
++    public Long getIDUsers()
++    {
++        return IDUsers ;
++    }
++
++    @XmlElement(name = "IDUsers")
++    public void setIDUsers( Long iDUsers )
++    {
++        IDUsers = iDUsers ;
++    }
++
++    public Long getIDPermissionsTypes()
++    {
++        return IDPermissionsTypes ;
++    }
++
++    @XmlElement(name = "IDPermissionsTypes")
++    public void setIDPermissionsTypes( Long iDPermissionsTypes )
++    {
++        IDPermissionsTypes = iDPermissionsTypes ;
++    }
++
++    public String getValue()
++    {
++        return Value ;
++    }
++
++    @XmlElement(name = "Value")
++    public void setValue( String Value )
++    {
++        this.Value = Value ;
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/PermissionType.hbm.xml b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/PermissionType.hbm.xml
+new file mode 100644
+index 0000000..df17568
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/PermissionType.hbm.xml
+@@ -0,0 +1,15 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="com.intel.openAttestation.manifest.hibernate.domain.PermissionType" table="PERMISSIONS_TYPES">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="ClassValue" column="CLASS"/>
++		<property name="Operation" column="OPERATION"/>
++        <property name="ParName" column="PAR_NAME"/>
++        <property name="IsEnforced" column="IS_ENFORCED"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/User.hbm.xml b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/User.hbm.xml
+new file mode 100644
+index 0000000..a3ae07f
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/User.hbm.xml
+@@ -0,0 +1,14 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="com.intel.openAttestation.manifest.hibernate.domain.User" table="USERS">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="Username" column="USERNAME"/>
++		<property name="Password" column="PASSWORD"/>
++        <property name="Deleted" column="DELETED"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/UserPermissions.hbm.xml b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/UserPermissions.hbm.xml
+new file mode 100644
+index 0000000..3e73dcc
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/hibernate/mapping/UserPermissions.hbm.xml
+@@ -0,0 +1,14 @@
++<?xml version="1.0"?>
++<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
++	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
++
++<hibernate-mapping>
++	<class name="com.intel.openAttestation.manifest.hibernate.domain.UserPermissions" table="USERS_PERMISSIONS">
++		<id name="ID" column="ID" type="long" unsaved-value="null">
++			<generator class="native" />
++		</id>
++		<property name="IDUsers" column="ID_USERS"/>
++		<property name="IDPermissionsTypes" column="ID_PERMISSIONS_TYPES"/>
++        <property name="Value" column="VALUE"/>
++	</class>
++</hibernate-mapping>
+\ No newline at end of file
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/resource/PermissionTypeResource.java b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/PermissionTypeResource.java
+new file mode 100644
+index 0000000..f3fe315
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/PermissionTypeResource.java
+@@ -0,0 +1,149 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.resource;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++
++import javax.ws.rs.Consumes;
++import javax.ws.rs.DELETE;
++import javax.ws.rs.POST;
++import javax.ws.rs.PUT;
++import javax.ws.rs.Path;
++import javax.ws.rs.Produces;
++import javax.ws.rs.QueryParam;
++import javax.ws.rs.core.Context;
++import javax.ws.rs.core.MediaType;
++import javax.ws.rs.core.Response;
++import javax.ws.rs.core.UriBuilder;
++import javax.ws.rs.core.UriInfo;
++
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.util.HisUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestService;
++
++import com.intel.openAttestation.manifest.bean.OpenAttestationResponseFault;
++import com.intel.openAttestation.manifest.hibernate.dao.PermissionTypeDAO;
++import com.intel.openAttestation.manifest.hibernate.domain.PermissionType;
++
++import java.util.List;
++
++/**
++ * RESTful web service interface to work with OEM DB.
++ * @author xmei1
++ *
++ */
++
++@Path("resources/permissions_types")
++public class PermissionTypeResource
++{
++    @PUT
++    @Consumes("application/json")
++    @Produces("application/json")
++    public Response editUserPermission( @Context UriInfo uriInfo , PermissionType permissionType, @Context javax.servlet.http.HttpServletRequest request )
++    {
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( PermissionTypeResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            PermissionTypeDAO dao = new PermissionTypeDAO() ;
++
++            HashMap parameters = new HashMap() ;
++
++            // If there isn't Class on the input request, it's an error
++            if( permissionType.getClassValue() != null )
++            {
++                parameters.put( permissionType.getClassValue() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Operation on the input request, it's an error
++            if( permissionType.getOperation() != null )
++            {
++                parameters.put( permissionType.getOperation() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't ParName on the input request, it's an error
++            if( permissionType.getParName() != null )
++            {
++                parameters.put( permissionType.getParName() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there aren't Values on the input request, it's an error
++            if( !isValidKey ||
++                permissionType.getClassValue().length() < 1 ||
++                permissionType.getOperation().length() < 1 ||
++                permissionType.getParName().length() < 1 ||
++                !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Edit PermissionType entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            // Read from .properties if we can edit the permission types
++            if( AttestUtil.getEditPermissionTypeEnabled() )
++            {
++                // The permission type must exists
++                if( dao.permissionTypeExists( permissionType ) )
++                {
++                    // Insert the entry related to this permission type
++                    dao.editPermissionTypeEntry( permissionType ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                            .build() ;
++                }
++                else
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_1006 ) ;
++                    fault.setError_message( "Data Error - This permission does not exists on the database" ) ;        
++                    return Response.status( status ).entity( fault ).build() ;
++                }
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The access to the Permission Type resource is forbidden");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Edit Permission Type entry failed." + "Exception:" + e.getMessage() ) ;
++            return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                    .build() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserPermissionResource.java b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserPermissionResource.java
+new file mode 100644
+index 0000000..bed185c
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserPermissionResource.java
+@@ -0,0 +1,695 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.resource;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++
++import javax.ws.rs.Consumes;
++import javax.ws.rs.DELETE;
++import javax.ws.rs.POST;
++import javax.ws.rs.PUT;
++import javax.ws.rs.Path;
++import javax.ws.rs.Produces;
++import javax.ws.rs.QueryParam;
++import javax.ws.rs.core.Context;
++import javax.ws.rs.core.MediaType;
++import javax.ws.rs.core.Response;
++import javax.ws.rs.core.UriBuilder;
++import javax.ws.rs.core.UriInfo;
++
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.util.HisUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestService;
++import gov.niarl.hisAppraiser.hibernate.util.ParNameContainer;
++
++import com.intel.openAttestation.manifest.bean.OpenAttestationResponseFault;
++import com.intel.openAttestation.manifest.hibernate.dao.UserPermissionDAO;
++import com.intel.openAttestation.manifest.hibernate.domain.UserPermissions;
++import com.intel.openAttestation.manifest.bean.UserPermissionsBean;
++
++import org.apache.commons.codec.digest.DigestUtils;
++
++import org.hibernate.Query;
++import java.util.List;
++
++/**
++ * RESTful web service interface to work with OEM DB.
++ * @author xmei1
++ *
++ */
++
++@Path("resources/users_permissions")
++public class UserPermissionResource
++{
++    @POST
++    @Consumes("application/json")
++    @Produces("application/json")
++    public Response addUserPermission( @Context UriInfo uriInfo , UserPermissionsBean userPermissions , @Context javax.servlet.http.HttpServletRequest request )
++    {
++        System.out.println( "Check if the Username exists:" + userPermissions.getUsername() ) ;
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserPermissionResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserPermissionDAO dao = new UserPermissionDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( userPermissions.getUsername() != null )
++            {
++                parameters.put( userPermissions.getUsername() , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Class on the input request, it's an error
++            if( userPermissions.getClassValue() != null )
++            {
++                parameters.put( userPermissions.getClassValue() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Operation on the input request, it's an error
++            if( userPermissions.getOperation() != null )
++            {
++                parameters.put( userPermissions.getOperation() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't ParName on the input request, it's an error
++            if( userPermissions.getParName() != null )
++            {
++                parameters.put( userPermissions.getParName() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Value on the input request, it's an error
++            if( userPermissions.getValue() == null )
++            {
++                isValidKey = false ;
++            }
++
++            // If there aren't Values on the input request, it's an error
++            if( !isValidKey ||
++                userPermissions.getUsername().length() < 1 ||
++                userPermissions.getClassValue().length() < 1 ||
++                userPermissions.getOperation().length() < 1 ||
++                userPermissions.getParName().length() < 1 ||
++                userPermissions.getValue().length() < 1 ||
++                !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Add UserPermission entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Add" , "Username" ) ;
++            boolean isClassEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Add" , "Class" ) ;
++            boolean isOperationEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Add" , "Operation" ) ;
++            boolean isParNameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Add" , "ParName" ) ;
++            boolean isValueEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Add" , "Value" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , userPermissions.getUsername() ) ) ;
++            }
++            // Check the Class validity, if the Enforcement is enabled
++            if( isClassEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Class" , userPermissions.getClassValue() ) ) ;
++            }
++            // Check the Operation validity, if the Enforcement is enabled
++            if( isOperationEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Operation" , userPermissions.getOperation() ) ) ;
++            }
++            // Check the ParName validity, if the Enforcement is enabled
++            if( isParNameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "ParName" , userPermissions.getParName() ) ) ;
++            }
++            // Check the Value validity, if the Enforcement is enabled
++            if( isValueEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Value" , userPermissions.getValue() ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "UserPermission" , "Add" , parnameValues ) )
++            {
++                // The Username of the userPermissions we are trying to add must exists to be considered valid
++                System.out.println( "Get the UserID from the Username: " + userPermissions.getUsername() ) ;
++                Long userIDForPermission = dao.getUserIDFromUsername( userPermissions.getUsername() ) ;
++                if( userIDForPermission < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - Username " + userPermissions.getUsername() + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The Username of the userPermissions we are trying to add must exists to be considered valid
++                System.out.println( "Get the PermissionType from the PermissionTypeData: " + userPermissions.getClassValue() + " - " + userPermissions.getOperation() + " - " + userPermissions.getParName() ) ;
++                Long permissionTypeID = dao.getPermissionTypeIDFromPermissionTypeData( userPermissions.getClassValue() , userPermissions.getOperation() , userPermissions.getParName() ) ;
++                if( permissionTypeID < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - PermissionType " + userPermissions.getClassValue() + " - " + userPermissions.getOperation() + " - " + userPermissions.getParName() + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // All the permissions we are trying to add must not exists to be considered a valid situation
++                System.out.println( "Check if the Permission exists" ) ;
++                if( dao.userPermissionsExists( userIDForPermission , permissionTypeID ) )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - Permission " + userPermissions.getUsername() + " - " + userPermissions.getClassValue() + " - " + userPermissions.getOperation() + " - " + userPermissions.getParName() + " already exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // Insert the entry related to this user permission
++                dao.addUserPermissionEntry( userIDForPermission , permissionTypeID , userPermissions.getValue() ) ;
++                return Response.status( status ).header( "Location" , b.build() ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                        .build() ;
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The passed values are not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Add Permission entry failed." + "Exception:" + e.getMessage() ) ;
++            return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                    .build() ;
++        }
++    }
++
++    @PUT
++    @Consumes("application/json")
++    @Produces("application/json")
++    public Response editUserPermission( @Context UriInfo uriInfo , UserPermissionsBean userPermissions, @Context javax.servlet.http.HttpServletRequest request )
++    {
++        System.out.println( "Check if the Username exists:" + userPermissions.getUsername() ) ;
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserPermissionResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserPermissionDAO dao = new UserPermissionDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( userPermissions.getUsername() != null )
++            {
++                parameters.put( userPermissions.getUsername() , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Class on the input request, it's an error
++            if( userPermissions.getClassValue() != null )
++            {
++                parameters.put( userPermissions.getClassValue() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Operation on the input request, it's an error
++            if( userPermissions.getOperation() != null )
++            {
++                parameters.put( userPermissions.getOperation() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't ParName on the input request, it's an error
++            if( userPermissions.getParName() != null )
++            {
++                parameters.put( userPermissions.getParName() , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Value on the input request, it's an error
++            if( userPermissions.getValue() == null )
++            {
++                isValidKey = false ;
++            }
++
++            // If there aren't Values on the input request, it's an error
++            if( !isValidKey ||
++                userPermissions.getUsername().length() < 1 ||
++                userPermissions.getClassValue().length() < 1 ||
++                userPermissions.getOperation().length() < 1 ||
++                userPermissions.getParName().length() < 1 ||
++                userPermissions.getValue().length() < 1 ||
++                !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Add UserPermission entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Edit" , "Username" ) ;
++            boolean isClassEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Edit" , "Class" ) ;
++            boolean isOperationEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Edit" , "Operation" ) ;
++            boolean isParNameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Edit" , "ParName" ) ;
++            boolean isValueEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Edit" , "Value" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , userPermissions.getUsername() ) ) ;
++            }
++            // Check the Class validity, if the Enforcement is enabled
++            if( isClassEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Class" , userPermissions.getClassValue() ) ) ;
++            }
++            // Check the Operation validity, if the Enforcement is enabled
++            if( isOperationEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Operation" , userPermissions.getOperation() ) ) ;
++            }
++            // Check the ParName validity, if the Enforcement is enabled
++            if( isParNameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "ParName" , userPermissions.getParName() ) ) ;
++            }
++            // Check the Value validity, if the Enforcement is enabled
++            if( isValueEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Value" , userPermissions.getValue() ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "UserPermission" , "Edit" , parnameValues ) )
++            {
++                // The Username of the userPermissions we are trying to add must exists to be considered valid
++                System.out.println( "Get the UserID from the Username: " + userPermissions.getUsername() ) ;
++                Long userIDForPermission = dao.getUserIDFromUsername( userPermissions.getUsername() ) ;
++                if( userIDForPermission < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - Username " + userPermissions.getUsername() + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The PermissionTypeData of the permission we are trying to add must exists to be considered valid
++                System.out.println( "Get the PermissionType from the PermissionTypeData: " + userPermissions.getClassValue() + " - " + userPermissions.getOperation() + " - " + userPermissions.getParName() ) ;
++                Long permissionTypeID = dao.getPermissionTypeIDFromPermissionTypeData( userPermissions.getClassValue() , userPermissions.getOperation() , userPermissions.getParName() ) ;
++                if( permissionTypeID < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - PermissionType " + userPermissions.getClassValue() + " - " + userPermissions.getOperation() + " - " + userPermissions.getParName() + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The permissions we are trying to edit must exists
++                System.out.println( "Check if the Permission exists" ) ;
++                if( dao.userPermissionsExists( userIDForPermission , permissionTypeID ) )
++                {
++                    // Editing User Permission
++                    dao.editUserPermissionEntry( userIDForPermission , permissionTypeID , userPermissions.getValue() ) ;
++                    return Response.status( status ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                            .build() ;
++                }
++                else
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_1006 ) ;
++                    fault.setError_message( "Data Error - This permission for " + userPermissions.getUsername() + " does not exist in the database" ) ;        
++                    return Response.status( status ).entity( fault )
++                            .build() ;
++                }
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The passed values are not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Edit Permission entry failed." + "Exception:" + e.getMessage() ) ;
++            return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                    .build() ;
++        }
++    }
++    
++    @DELETE
++    @Produces("application/json")
++    public Response delUserPermission( @QueryParam("Username") String Username , @QueryParam("Class") String Class , @QueryParam("Operation") String Operation , @QueryParam("ParName") String ParName , @Context UriInfo uriInfo , @Context javax.servlet.http.HttpServletRequest request )
++    {
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserPermissionResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserPermissionDAO dao = new UserPermissionDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( Username != null )
++            {
++                parameters.put( Username , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Class on the input request, it's an error
++            if( Class != null )
++            {
++                parameters.put( Class , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Operation on the input request, it's an error
++            if( Operation != null )
++            {
++                parameters.put( Operation , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't ParName on the input request, it's an error
++            if( ParName != null )
++            {
++                parameters.put( ParName , 100 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            if( !isValidKey || Username.length() < 1 || Class.length() < 1 || Operation.length() < 1 || ParName.length() < 1 || !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Delete Permission entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Delete" , "Username" ) ;
++            boolean isClassEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Delete" , "Class" ) ;
++            boolean isOperationEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Delete" , "Operation" ) ;
++            boolean isParNameEnforced = AttestService.ISV_Permission_Type_Enforcement( "UserPermission" , "Delete" , "ParName" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized delete User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , Username ) ) ;
++            }
++            // Check the Class validity, if the Enforcement is enabled
++            if( isClassEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized delete User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Class" , Class ) ) ;
++            }
++            // Check the Operation validity, if the Enforcement is enabled
++            if( isOperationEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized delete User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Operation" , Operation ) ) ;
++            }
++            // Check the ParName validity, if the Enforcement is enabled
++            if( isParNameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized delete User Permission, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "ParName" , ParName ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "UserPermission" , "Delete" , parnameValues ) )
++            {
++                // The Username of the userPermissions we are trying to add must exists to be considered valid
++                System.out.println( "Get the UserID from the Username: " + Username ) ;
++                Long userIDForPermission = dao.getUserIDFromUsername( Username ) ;
++                if( userIDForPermission < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - Username " + Username + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The PermissionTypeData of the permission we are trying to add must exists to be considered valid
++                System.out.println( "Get the PermissionType from the PermissionTypeData: " + Class + " - " + Operation + " - " + ParName ) ;
++                Long permissionTypeID = dao.getPermissionTypeIDFromPermissionTypeData( Class , Operation , ParName ) ;
++                if( permissionTypeID < 0 )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - PermissionType " + Class + " - " + Operation + " - " + ParName + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The permissions we are trying to delete must exists
++                System.out.println( "Check if the Permission exists" ) ;
++                if( dao.userPermissionsExists( userIDForPermission , permissionTypeID ) )
++                {
++                    // Deleting User Permission
++                    dao.deleteUserPermissionEntry( userIDForPermission , permissionTypeID ) ;
++                    return Response.status( status ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                            .build() ;
++                }
++
++                status = Response.Status.BAD_REQUEST ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_1006 ) ;
++                fault.setError_message( "Data Error - This permission for " + Username + " does not exist in the database" ) ;        
++                return Response.status( status ).entity( fault )
++                        .build() ;
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The passed values are not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Delete Permission entry failed." + "Exception:" + e.getMessage() ) ; 
++            return Response.status( status ).entity( fault )
++                    .build() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserResource.java b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserResource.java
+new file mode 100644
+index 0000000..d946d61
+--- /dev/null
++++ b/Source/WLMService/src/com/intel/openAttestation/manifest/resource/UserResource.java
+@@ -0,0 +1,385 @@
++/*
++Copyright (C) 2014 Politecnico di Torino, Italy
++TORSEC group -- http://security.polito.it
++*/
++
++package com.intel.openAttestation.manifest.resource;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++
++import javax.ws.rs.Consumes;
++import javax.ws.rs.DELETE;
++import javax.ws.rs.POST;
++import javax.ws.rs.PUT;
++import javax.ws.rs.Path;
++import javax.ws.rs.Produces;
++import javax.ws.rs.QueryParam;
++import javax.ws.rs.core.Context;
++import javax.ws.rs.core.MediaType;
++import javax.ws.rs.core.Response;
++import javax.ws.rs.core.UriBuilder;
++import javax.ws.rs.core.UriInfo;
++
++import org.hibernate.Session;
++import gov.niarl.hisAppraiser.util.HisUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestUtil;
++import gov.niarl.hisAppraiser.hibernate.util.AttestService;
++import gov.niarl.hisAppraiser.hibernate.util.ParNameContainer;
++
++import com.intel.openAttestation.manifest.bean.OpenAttestationResponseFault;
++import com.intel.openAttestation.manifest.hibernate.dao.UserDAO;
++import com.intel.openAttestation.manifest.hibernate.domain.User;
++import com.intel.openAttestation.manifest.resource.UserResource;
++
++import org.apache.commons.codec.digest.DigestUtils;
++
++import org.hibernate.Query;
++import java.util.List;
++
++/**
++ * RESTful web service interface to work with OEM DB.
++ * @author xmei1
++ *
++ */
++
++@Path("resources/users")
++public class UserResource
++{
++    @POST
++    @Consumes("application/json")
++    @Produces("application/json")
++    public Response addUser( @Context UriInfo uriInfo , User user , @Context javax.servlet.http.HttpServletRequest request )
++    {
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserDAO dao = new UserDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( user.getUsername() != null )
++            {
++                parameters.put( user.getUsername() , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Password on the input request, it's an error
++            if( user.getPassword() == null )
++            {
++                isValidKey = false ;
++            }
++
++            if( !isValidKey || user.getUsername().length() < 1 || user.getPassword().length() < 1 || !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Add User entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "User" , "Add" , "Username" ) ;
++            boolean isPasswordEnforced = AttestService.ISV_Permission_Type_Enforcement( "User" , "Add" , "Password" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , user.getUsername() ) ) ;
++            }
++            // Check the Password validity, if the Enforcement is enabled
++            if( isPasswordEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized add User, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Password" , user.getPassword() ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "User" , "Add" , parnameValues ) )
++            {
++                // The Username of the user we are trying to add must not exists to be considered valid
++                System.out.println( "Check if the User Username exists:" + user.getUsername() ) ;
++                if( dao.isUserExisted( user.getUsername() ) )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - User " + user.getUsername( )+ " already exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The password is stored with a SHA-1 hashing
++                user.setPassword( AttestService.getHash( user.getPassword() , "SHA-1" ) ) ;
++                // Insert an entry into USERS
++                dao.addUserEntry( user ) ;
++
++                return Response.status( status ).header( "Location" , b.build() ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                        .build() ;
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The couple Username/Password is not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Add User entry failed." + "Exception:" + e.getMessage() ) ;
++            return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                    .build() ;
++        }
++    }
++
++    @PUT
++    @Consumes("application/json")
++    @Produces("application/json")
++    public Response editUser( @Context UriInfo uriInfo , User user, @Context javax.servlet.http.HttpServletRequest request )
++    {
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserDAO dao = new UserDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( user.getUsername() != null )
++            {
++                parameters.put( user.getUsername() , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            // If there isn't Password on the input request, it's an error
++            if( user.getPassword() == null )
++            {
++                isValidKey = false ;
++            }
++
++            if( !isValidKey || user.getUsername().length() < 1 || user.getPassword().length() < 1 || !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Edit User entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "User" , "Edit" , "Username" ) ;
++            boolean isPasswordEnforced = AttestService.ISV_Permission_Type_Enforcement( "User" , "Edit" , "Password" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , user.getUsername() ) ) ;
++            }
++            // Check the Password validity, if the Enforcement is enabled
++            if( isPasswordEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized edit User, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Password" , user.getPassword() ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "User" , "Edit" , parnameValues ) )
++            {
++                // The Username of the user we are trying to add must exists
++                System.out.println( "Check if the User Username exists:" + user.getUsername() ) ;
++                if( !dao.isUserExisted( user.getUsername() ) )
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - User " + user.getUsername( )+ " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++
++                // The password is stored with a SHA-1 hashing
++                user.setPassword( AttestService.getHash( user.getPassword() , "SHA-1" ) ) ;
++                // Edit an USERS entry
++                dao.editUserEntry( user ) ;
++
++                return Response.status( status ).header( "Location" , b.build() ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                        .build() ;
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The couple Username/Password is not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Add User entry failed." + "Exception:" + e.getMessage() ) ;
++            return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                    .build() ;
++        }
++    }
++    
++    @DELETE
++    @Produces("application/json")
++    public Response deluserEntry( @QueryParam("Username") String Username , @Context UriInfo uriInfo , @Context javax.servlet.http.HttpServletRequest request )
++    {
++        UriBuilder b = uriInfo.getBaseUriBuilder() ;
++        b = b.path( UserResource.class ) ;
++        Response.Status status = Response.Status.OK ;
++        boolean isValidKey = true ;
++        AttestUtil.loadProp() ;
++        try
++        {
++            UserDAO dao = new UserDAO() ;
++
++            HashMap parameters = new HashMap() ;
++            // If there isn't Username on the input request, it's an error
++            if( Username != null )
++            {
++                parameters.put( Username , 50 ) ;
++            }
++            else
++            {
++                isValidKey = false ;
++            }
++
++            if( !isValidKey || Username.length() < 1 || !HisUtil.validParas( parameters ) )
++            {
++                status = Response.Status.INTERNAL_SERVER_ERROR ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++                fault.setError_message( "Delete User entry failed, please check the length for each parameters" +
++                        " and remove all of the unwanted characters belonged to [# & + : \" \']" ) ;
++                return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                        .build() ;
++            }
++
++            // Authentication
++            Long userId = AttestService.ISV_Autherntication_module( request ) ;
++
++            boolean isUsernameEnforced = AttestService.ISV_Permission_Type_Enforcement( "User" , "Delete" , "Username" ) ;
++
++            List<ParNameContainer> parnameValues = new ArrayList<ParNameContainer>() ;
++            // Check the Username validity, if the Enforcement is enabled
++            if( isUsernameEnforced )
++            {
++                if( userId < 0 )
++                {
++                    status = Response.Status.UNAUTHORIZED ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                            OpenAttestationResponseFault.FaultCode.FAULT_401);
++                    fault.setError_message("Unauthorized delete User, please make sure that the authentication informations are correct");
++                    return Response.status(status).header("Location", b.build()).entity(fault).build();
++                }
++
++                parnameValues.add( new ParNameContainer( "Username" , Username ) ) ;
++            }
++
++            // If no element is enforced, or if they are all in the authorized format, we can proceed
++            if( parnameValues.size() < 1 || AttestService.doAuthorization( userId , "User" , "Delete" , parnameValues ) )
++            {
++                // The Username we are trying to delete must exists on the database
++                if( dao.isUserExisted( Username ) )
++                {
++                    // Deleting User
++                    dao.deleteUserEntry( Username ) ;
++                    return Response.status( status ).type( MediaType.TEXT_PLAIN ).entity( "True" )
++                            .build() ;
++                }
++                else
++                {
++                    status = Response.Status.BAD_REQUEST ;
++                    OpenAttestationResponseFault fault = new OpenAttestationResponseFault( 1006 ) ;
++                    fault.setError_message( "Data Error - User " + Username + " does not exists in the database" ) ;
++                    return Response.status( status ).header( "Location" , b.build() ).entity( fault )
++                            .build();
++                }
++            }
++            else
++            {
++                status = Response.Status.FORBIDDEN ;
++                OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                        OpenAttestationResponseFault.FaultCode.FAULT_403);
++                fault.setError_message("The Username is not in an authorized format");
++                return Response.status(status).header("Location", b.build()).entity(fault).build();
++            }
++        }
++        catch( Exception e )
++        {
++            status = Response.Status.INTERNAL_SERVER_ERROR ;
++            OpenAttestationResponseFault fault = new OpenAttestationResponseFault(
++                    OpenAttestationResponseFault.FaultCode.FAULT_500 ) ;
++            fault.setError_message( "Delete User entry failed." + "Exception:" + e.getMessage() ) ; 
++            return Response.status( status ).entity( fault )
++                    .build() ;
++        }
++    }
++}
+diff --git a/Source/WLMService/src/hibernateOat.cfg.xml b/Source/WLMService/src/hibernateOat.cfg.xml
+index 1c159c3..fa10807 100644
+--- a/Source/WLMService/src/hibernateOat.cfg.xml
++++ b/Source/WLMService/src/hibernateOat.cfg.xml
+@@ -27,5 +27,9 @@
+ 		<mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/OS.hbm.xml"/>
+ 		<mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/PcrWhiteList.hbm.xml"/>
+ 		<mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/MLE.hbm.xml"/>
++        <mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/HOST.hbm.xml"/>
++        <mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/User.hbm.xml"/>
++        <mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/UserPermissions.hbm.xml"/>
++        <mapping resource="com/intel/openAttestation/manifest/hibernate/mapping/PermissionType.hbm.xml"/>
+ 	</session-factory>
+ </hibernate-configuration>
+-- 
+1.7.9.5
+

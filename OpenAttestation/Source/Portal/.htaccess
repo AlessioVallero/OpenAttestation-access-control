@@ -1,0 +1,24 @@
+AuthType Basic
+AuthName "Give your username and password"
+
+Auth_MySQL_User root
+Auth_MySQL_Empty_Passwords on
+Auth_MySQL_Host localhost
+
+AuthBasicAuthoritative Off
+# Disable the default password file authentication
+AuthUserFile /dev/null
+Auth_MySQL on
+Auth_MySQL_DB oat_db
+Auth_MySQL_Password_Table USERS
+Auth_MySQL_Username_Field USERS.USERNAME
+Auth_MySQL_Password_Field USERS.PASSWORD
+Auth_MySQL_Password_Clause " AND DELETED=0"
+Auth_MySQL_Encryption_Types SHA1Sum
+Auth_MySQL_Persistent On
+Auth_MySQL_CharacterSet utf8
+
+Require valid-user
+Order allow,deny
+Allow from all
+
